@@ -9,6 +9,8 @@ type GlobeSceneProps = {
   transportMode: "default" | "flight" | "shipping" | "allTransport";
 };
 
+const GLOBE_SCENE_REV = "2026-04-24-r1";
+
 export default function GlobeScene({ transportMode }: GlobeSceneProps) {
   const [isInteracting, setIsInteracting] = React.useState(false);
 
@@ -28,6 +30,7 @@ export default function GlobeScene({ transportMode }: GlobeSceneProps) {
     // 關鍵修正：確保容器是絕對定位且撐滿，並設定 pointer-events-auto 以便操作地球
     <div className="w-full h-full relative z-0">
       <Canvas
+        key={GLOBE_SCENE_REV}
         camera={{ position: [0, 0, 6], fov: 45 }}
         // gl 設定優化
         gl={{ 

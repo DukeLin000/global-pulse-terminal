@@ -13,9 +13,15 @@ export default function Sidebar() {
   const setSelectedRegion = useTerminalStore((state) => state.setSelectedRegion);
   const openLivePopup = useTerminalStore((state) => state.openLivePopup);
   const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
+  const isLeftPanelOpen = useTerminalStore((state) => state.isLeftPanelOpen);
+  const closeLeftPanel = useTerminalStore((state) => state.closeLeftPanel);
 
   return (
-    <nav className="w-64 h-full bg-[#05070a] border-r border-white/5 flex flex-col z-30 shadow-2xl shrink-0">
+    <nav
+      className={`w-56 xl:w-64 h-full bg-[#05070a] border-r border-white/5 flex flex-col z-40 shadow-2xl shrink-0 transition-transform duration-300 ${
+        isLeftPanelOpen ? "translate-x-0" : "-translate-x-full"
+      } fixed left-0 top-0 xl:relative`}
+    >
       <div className="p-6 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center">
           <span className="font-black text-xs text-white">GP</span>
@@ -142,6 +148,13 @@ export default function Sidebar() {
       <div className="p-3 border-t border-white/5">
         <NavItem icon="⚙" label="設定" sub="API 設定" onClick={() => setActiveTab("設定")} active={activeTab === "設定"} />
       </div>
+      <button
+        type="button"
+        onClick={closeLeftPanel}
+        className="xl:hidden absolute top-3 right-3 text-xs px-2 py-1 rounded bg-white/10 text-white"
+      >
+        關閉
+      </button>
     </nav>
   );
 }

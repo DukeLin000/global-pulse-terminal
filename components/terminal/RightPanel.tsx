@@ -32,8 +32,8 @@ export default function RightPanel() {
   const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
   const isDataLoading = useTerminalStore((state) => state.isDataLoading);
   const dataError = useTerminalStore((state) => state.dataError);
-  const collapsed = useTerminalStore((state) => state.isRightPanelCollapsed);
-  const toggleRightPanelCollapsed = useTerminalStore((state) => state.toggleRightPanelCollapsed);
+  const isRightPanelOpen = useTerminalStore((state) => state.isRightPanelOpen);
+  const toggleRightPanel = useTerminalStore((state) => state.toggleRightPanel);
   const setFocusCoordinates = useTerminalStore((state) => state.setFocusCoordinates);
 
   const selectedLiveNewsSource = useMemo(
@@ -59,31 +59,30 @@ export default function RightPanel() {
   const showFlightPanel = activeTab.startsWith("交通狀態/飛航");
   const showShippingPanel = activeTab.startsWith("交通狀態/海運");
 
-  if (collapsed) {
+  if (!isRightPanelOpen) {
     return (
-      <aside className="w-14 z-20 mr-2 my-2 rounded-xl border border-white/10 bg-[#0a0e14]/90 backdrop-blur-xl flex flex-col items-center py-2 gap-2 pointer-events-auto">
+      <aside className="absolute right-2 top-1/2 -translate-y-1/2 z-20 pointer-events-auto">
         <button
           type="button"
-          onClick={toggleRightPanelCollapsed}
-          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white"
-          aria-label="展開右側資訊欄"
+          onClick={toggleRightPanel}
+          className="w-9 h-20 rounded-lg bg-[#0a0e14]/90 border border-white/10 hover:bg-white/10 text-white"
+          aria-label="展開右側面板"
         >
-          ◀
+          ◀◀
         </button>
-        <div className="text-[9px] text-gray-400 [writing-mode:vertical-rl] tracking-widest">INFO</div>
       </aside>
     );
   }
 
   return (
-    <aside className="w-[380px] z-10 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar ml-auto pointer-events-auto h-full relative">
+    <aside className="w-[300px] xl:w-[380px] z-10 p-3 xl:p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar ml-auto pointer-events-auto h-full relative bg-transparent">
       <button
         type="button"
-        onClick={toggleRightPanelCollapsed}
+        onClick={toggleRightPanel}
         className="absolute right-4 top-4 z-20 w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white"
-        aria-label="縮小右側資訊欄"
+        aria-label="收合右側面板"
       >
-        ▶
+        ▶▶
       </button>
 
       <DashboardPanel title="全域同步狀態" tag="STORE">

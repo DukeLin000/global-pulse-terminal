@@ -14,7 +14,8 @@ type TerminalStore = {
   selectedRegion: RegionKey;
   globalRiskIndex: number;
   isLivePopupOpen: boolean;
-  isRightPanelCollapsed: boolean;
+  isLeftPanelOpen: boolean;
+  isRightPanelOpen: boolean;
   newsItems: NewsItem[];
   conflictItems: ConflictItem[];
   liveNewsSources: LiveNewsSource[];
@@ -29,7 +30,9 @@ type TerminalStore = {
   setGlobalRiskIndex: (value: number) => void;
   openLivePopup: () => void;
   closeLivePopup: () => void;
-  toggleRightPanelCollapsed: () => void;
+  toggleLeftPanel: () => void;
+  closeLeftPanel: () => void;
+  toggleRightPanel: () => void;
   refreshTerminalData: () => Promise<void>;
   startPolling: (intervalMs?: number) => void;
   stopPolling: () => void;
@@ -48,7 +51,8 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   selectedRegion: "global",
   globalRiskIndex: 0,
   isLivePopupOpen: false,
-  isRightPanelCollapsed: false,
+  isLeftPanelOpen: true,
+  isRightPanelOpen: true,
   newsItems: NEWS_ITEMS,
   conflictItems: CONFLICT_ITEMS,
   liveNewsSources: LIVE_NEWS_SOURCES,
@@ -71,7 +75,9 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   setGlobalRiskIndex: (value) => set({ globalRiskIndex: value }),
   openLivePopup: () => set({ isLivePopupOpen: true }),
   closeLivePopup: () => set({ isLivePopupOpen: false }),
-  toggleRightPanelCollapsed: () => set((state) => ({ isRightPanelCollapsed: !state.isRightPanelCollapsed })),
+  toggleLeftPanel: () => set((state) => ({ isLeftPanelOpen: !state.isLeftPanelOpen })),
+  closeLeftPanel: () => set({ isLeftPanelOpen: false }),
+  toggleRightPanel: () => set((state) => ({ isRightPanelOpen: !state.isRightPanelOpen })),
   refreshTerminalData: async () => {
     if (inflightRequest) return inflightRequest;
 

@@ -63,6 +63,11 @@ export default function Terminal() {
   const setGlobalRiskIndex = useTerminalStore((state) => state.setGlobalRiskIndex);
   const startPolling = useTerminalStore((state) => state.startPolling);
   const stopPolling = useTerminalStore((state) => state.stopPolling);
+  const isLeftPanelOpen = useTerminalStore((state) => state.isLeftPanelOpen);
+  const toggleLeftPanel = useTerminalStore((state) => state.toggleLeftPanel);
+  const closeLeftPanel = useTerminalStore((state) => state.closeLeftPanel);
+  const isRightPanelOpen = useTerminalStore((state) => state.isRightPanelOpen);
+  const toggleRightPanel = useTerminalStore((state) => state.toggleRightPanel);
 
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => {
@@ -97,8 +102,32 @@ export default function Terminal() {
   return (
     <main className="h-screen w-full bg-[#020408] text-[#e2e8f0] font-sans text-[11px] flex overflow-hidden">
       <Sidebar />
+      {isLeftPanelOpen && (
+        <button
+          type="button"
+          aria-label="關閉左側面板遮罩"
+          className="xl:hidden fixed inset-0 bg-black/45 z-30"
+          onClick={closeLeftPanel}
+        />
+      )}
 
       <div className="flex-1 flex flex-col relative min-w-0 bg-[#02040a]">
+        <div className="absolute left-3 top-3 z-40 flex gap-2 pointer-events-auto">
+          <button
+            type="button"
+            onClick={toggleLeftPanel}
+            className="px-2.5 py-1.5 rounded-md bg-[#0a0e14]/85 border border-white/10 text-[10px] text-white hover:bg-white/10"
+          >
+            {isLeftPanelOpen ? "隱藏左欄" : "顯示左欄"}
+          </button>
+          <button
+            type="button"
+            onClick={toggleRightPanel}
+            className="lg:hidden px-2.5 py-1.5 rounded-md bg-[#0a0e14]/85 border border-white/10 text-[10px] text-white hover:bg-white/10"
+          >
+            {isRightPanelOpen ? "隱藏右欄" : "顯示右欄"}
+          </button>
+        </div>
         <TopHeader searchInputRef={searchInputRef} />
 
         <div className="flex-1 relative overflow-hidden flex">

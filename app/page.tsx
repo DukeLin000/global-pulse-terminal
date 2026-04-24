@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/terminal/Sidebar";
 import TopHeader from "@/components/terminal/TopHeader";
 import RightPanel from "@/components/terminal/RightPanel";
+import LiveNewsPopup from "@/components/terminal/LiveNewsPopup";
 import {
   CONFLICT_ITEMS as TERMINAL_CONFLICT_ITEMS,
   LIVE_NEWS_SOURCES as TERMINAL_LIVE_NEWS_SOURCES,
@@ -59,6 +60,7 @@ export default function Terminal() {
   const [expanded, setExpanded] = useState<string[]>(["即時新聞", "投資中心", "報告中心"]);
   const [timeStr, setTimeStr] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLivePopupOpen, setIsLivePopupOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -104,7 +106,7 @@ export default function Terminal() {
 
   const selectLiveNews = (source: LiveNewsSource) => {
     setActiveTab(`新聞直播/${source.label}`);
-    window.open(source.url, "_blank", "noopener,noreferrer");
+    setIsLivePopupOpen(true);
   };
 
   return (
@@ -130,6 +132,10 @@ export default function Terminal() {
           <div className="absolute inset-0 z-0">
             <GlobeScene />
           </div>
+
+          {selectedLiveNewsSource && isLivePopupOpen && (
+            <LiveNewsPopup source={selectedLiveNewsSource} onClose={() => setIsLivePopupOpen(false)} />
+          )}
 
           <RightPanel
             selectedLiveNewsSource={selectedLiveNewsSource}

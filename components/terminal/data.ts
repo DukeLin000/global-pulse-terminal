@@ -32,11 +32,13 @@ export const LIVE_NEWS_SOURCES: LiveNewsSource[] = [
   {
     label: "CNN即時新聞",
     url: "https://www.cnn.com/world/live-news",
+    embedUrl: "https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1",
     description: "國際突發事件與全球即時快訊",
   },
   {
     label: "台灣即時新聞",
     url: "https://news.pts.org.tw/category/1",
+    embedUrl: "https://www.youtube.com/embed/TCnaIE_SAtM?autoplay=1&mute=1",
     description: "台灣本地焦點與政治社會動態",
   },
 ];

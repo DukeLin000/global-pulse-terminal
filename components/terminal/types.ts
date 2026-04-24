@@ -13,5 +13,6 @@ export type ConflictItem = {
 export type LiveNewsSource = {
   label: string;
   url: string;
+  embedUrl: string;
   description: string;
 };

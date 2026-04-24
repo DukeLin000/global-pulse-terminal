@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Globe from "./Globe";
@@ -8,7 +8,7 @@ import { tabToTransportMode, useTerminalStore } from "./terminal/store";
 
 const GLOBE_SCENE_REV = "2026-04-24-r2";
 
-export default function GlobeScene() {
+function GlobeSceneView() {
   const [isInteracting, setIsInteracting] = React.useState(false);
   const activeTab = useTerminalStore((state) => state.activeTab);
   const transportMode = tabToTransportMode(activeTab);
@@ -71,3 +71,5 @@ export default function GlobeScene() {
     </div>
   );
 }
+
+export default memo(GlobeSceneView);

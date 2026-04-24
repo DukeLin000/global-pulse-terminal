@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/terminal/Sidebar";
 import TopHeader from "@/components/terminal/TopHeader";
 import RightPanel from "@/components/terminal/RightPanel";
 import LiveNewsPopup from "@/components/terminal/LiveNewsPopup";
+import SystemFooter from "@/components/terminal/SystemFooter";
 import { useTerminalStore } from "@/components/terminal/store";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
@@ -51,7 +52,6 @@ const CONFLICT_ITEMS: ConflictItem[] = [
 ];
 
 export default function Terminal() {
-  const [timeStr, setTimeStr] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = useTerminalStore((state) => state.activeTab);
@@ -63,13 +63,6 @@ export default function Terminal() {
   const setGlobalRiskIndex = useTerminalStore((state) => state.setGlobalRiskIndex);
   const startPolling = useTerminalStore((state) => state.startPolling);
   const stopPolling = useTerminalStore((state) => state.stopPolling);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeStr(new Date().toLocaleString("zh-TW", { hour12: false }) + " UTC+8");
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => {
@@ -120,13 +113,7 @@ export default function Terminal() {
           <RightPanel />
         </div>
 
-        <footer className="h-8 border-t border-white/5 px-4 flex justify-between items-center bg-[#05070a] text-[9px] text-gray-600 shrink-0">
-          <div className="flex gap-4">
-            <span className="text-green-500 font-black tracking-widest uppercase">● SYSTEM_STABLE</span>
-            <span>STATION: TAIPEI_HUB_ALPHA</span>
-          </div>
-          <div className="font-mono tabular-nums">{timeStr}</div>
-        </footer>
+        <SystemFooter />
       </div>
     </main>
   );

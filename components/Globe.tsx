@@ -15,6 +15,10 @@ function latLonToVec3(lat: number, lon: number, r: number) {
   );
 }
 
+function latLonPathToPoints(path: Array<[number, number]>, radius: number) {
+  return path.map(([lat, lon]) => latLonToVec3(lat, lon, radius));
+}
+
 // ----------------------------------------------------------------------
 // 1. 獨立的資料集：飛行航班 (Flight Routes)
 // ----------------------------------------------------------------------
@@ -269,6 +273,91 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
             >
               <octahedronGeometry args={[0.06, 0]} />
               <meshBasicMaterial color="#f59e0b" transparent opacity={0.22} />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {/* =========================================
+          圖層一：飛行航班 (藍色軌跡與亮點)
+      ========================================= */}
+      {showFlight && (
+        <group name="FlightLayer">
+          {lines.map((geo, i) => (
+            <line key={`flight-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#67e8f9" transparent opacity={0.35} />
+            </line>
+          ))}
+
+          {dots.map((_, i) => (
+            <mesh
+              key={`flight-dot-${i}`}
+              ref={(el) => {
+                flightDotsRef.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#67e8f9" />
+            </mesh>
+          ))}
+
+          {dots.map((item, i) => (
+            <mesh
+              key={`flight-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <sphereGeometry args={[0.05, 10, 10]} />
+              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.45} />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {showShipping && (
+        <group name="ShippingLayer">
+          {shippingLines.map((geo, i) => (
+            <line key={`shipping-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#f59e0b" transparent opacity={0.45} />
+            </line>
+          ))}
+
+          {shippingDots.map((_, i) => (
+            <mesh
+              key={`shipping-dot-${i}`}
+              ref={(el) => {
+                shippingDotsRef.current[i] = el;
+              }}
+            >
+              <boxGeometry args={[0.03, 0.03, 0.03]} />
+              <meshBasicMaterial color="#fbbf24" />
+            </mesh>
+          ))}
+
+          {shippingDots.map((item, i) => (
+            <mesh
+              key={`shipping-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <octahedronGeometry args={[0.06, 0]} />
+              <meshBasicMaterial color="#f59e0b" transparent opacity={0.45} />
             </mesh>
           ))}
         </group>

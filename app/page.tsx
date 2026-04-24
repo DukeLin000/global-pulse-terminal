@@ -7,6 +7,7 @@ import TopHeader from "@/components/terminal/TopHeader";
 import RightPanel from "@/components/terminal/RightPanel";
 import LiveNewsPopup from "@/components/terminal/LiveNewsPopup";
 import SystemFooter from "@/components/terminal/SystemFooter";
+import AlertToasts from "@/components/terminal/AlertToasts";
 import { useTerminalStore } from "@/components/terminal/store";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
@@ -134,6 +135,7 @@ export default function Terminal() {
           <div className="absolute inset-0 z-0">
             <GlobeScene />
           </div>
+          <AlertToasts />
 
           {selectedLiveNewsSource && isLivePopupOpen && (
             <LiveNewsPopup source={selectedLiveNewsSource} onClose={closeLivePopup} />

@@ -11,6 +11,16 @@ export type FocusCoordinates = {
   label: string;
 };
 
+export type AlertLevel = "warning" | "critical";
+
+export type AlertToast = {
+  id: string;
+  level: AlertLevel;
+  title: string;
+  message: string;
+  createdAt: number;
+};
+
 export type NewsItem = {
   source: string;
   title: string;

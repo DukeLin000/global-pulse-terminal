@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES, NEWS_ITEMS } from "./data";
 import { fetchTerminalSnapshot } from "./api";
-import type { ConflictItem, FocusCoordinates, LiveNewsSource, NewsItem, RegionKey } from "./types";
+import type { AlertToast, ConflictItem, FocusCoordinates, LiveNewsSource, NewsItem, RegionKey } from "./types";
 
 type TransportMode = "default" | "flight" | "shipping" | "allTransport";
 
@@ -23,6 +23,7 @@ type TerminalStore = {
   dataError: string | null;
   lastFetchedAt: number | null;
   focusCoordinates: FocusCoordinates | null;
+  alerts: AlertToast[];
   setActiveTab: (tab: string) => void;
   toggleMenu: (menuName: string) => void;
   setSearchTerm: (value: string) => void;
@@ -37,6 +38,8 @@ type TerminalStore = {
   startPolling: (intervalMs?: number) => void;
   stopPolling: () => void;
   setFocusCoordinates: (payload: FocusCoordinates | null) => void;
+  pushAlert: (payload: Omit<AlertToast, "id" | "createdAt">) => void;
+  dismissAlert: (id: string) => void;
 };
 
 const defaultExpanded = ["即時新聞", "交通狀態", "投資中心", "報告中心", "地區焦點"];
@@ -60,6 +63,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   dataError: null,
   lastFetchedAt: null,
   focusCoordinates: null,
+  alerts: [],
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleMenu: (menuName) =>
     set((state) => ({
@@ -86,6 +90,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
       set({ isDataLoading: !hasCachedData, dataError: null });
 
       try {
+        const previousConflicts = get().conflictItems;
         const snapshot = await fetchTerminalSnapshot();
         set({
           newsItems: snapshot.newsItems,
@@ -95,6 +100,20 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
           isDataLoading: false,
           dataError: null,
         });
+
+        const highestConflict = snapshot.conflictItems.reduce<ConflictItem | null>(
+          (max, item) => (!max || item.score > max.score ? item : max),
+          null
+        );
+        if (!highestConflict) return;
+        const previousScore = previousConflicts.find((item) => item.name === highestConflict.name)?.score ?? 0;
+        if (highestConflict.score >= 200 && highestConflict.score > previousScore) {
+          get().pushAlert({
+            level: highestConflict.score >= 260 ? "critical" : "warning",
+            title: "重大地緣警報",
+            message: `${highestConflict.name} 風險指數升至 ${highestConflict.score}`,
+          });
+        }
       } catch (error) {
         set({
           isDataLoading: false,
@@ -120,6 +139,18 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     pollTimer = null;
   },
   setFocusCoordinates: (payload) => set({ focusCoordinates: payload }),
+  pushAlert: (payload) =>
+    set((state) => ({
+      alerts: [
+        ...state.alerts,
+        {
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          createdAt: Date.now(),
+          ...payload,
+        },
+      ].slice(-4),
+    })),
+  dismissAlert: (id) => set((state) => ({ alerts: state.alerts.filter((item) => item.id !== id) })),
 }));
 
 export function tabToTransportMode(activeTab: string): TransportMode {

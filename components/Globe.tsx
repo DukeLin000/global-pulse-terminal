@@ -62,6 +62,9 @@ const SHIPPING_ROUTES = [
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
+  // 相容性保護：避免舊版快取 bundle 仍引用 cyberRing ref 時產生 runtime error
+  const cyberRingARef = useRef<THREE.Mesh | null>(null);
+  const cyberRingBRef = useRef<THREE.Mesh | null>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const elapsedRef = useRef(0);
@@ -139,6 +142,9 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     elapsedRef.current += delta;
     const t = elapsedRef.current;
     if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
+    if (cyberRingARef.current || cyberRingBRef.current) {
+      // no-op: keep refs live for backward-compatible hot updates
+    }
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;

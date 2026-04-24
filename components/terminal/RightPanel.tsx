@@ -34,6 +34,7 @@ export default function RightPanel() {
   const dataError = useTerminalStore((state) => state.dataError);
   const collapsed = useTerminalStore((state) => state.isRightPanelCollapsed);
   const toggleRightPanelCollapsed = useTerminalStore((state) => state.toggleRightPanelCollapsed);
+  const setFocusCoordinates = useTerminalStore((state) => state.setFocusCoordinates);
 
   const selectedLiveNewsSource = useMemo(
     () => liveNewsSources.find((source) => activeTab === `新聞直播/${source.label}`),
@@ -140,7 +141,13 @@ export default function RightPanel() {
         <div className="space-y-3">
           {filteredNews.length > 0 ? (
             filteredNews.map((item) => (
-              <NewsCard key={`${item.source}-${item.title}`} source={item.source} title={item.title} time={item.time} />
+              <NewsCard
+                key={`${item.source}-${item.title}`}
+                source={item.source}
+                title={item.title}
+                time={item.time}
+                onClick={() => setFocusCoordinates(item.focusCoordinates ?? null)}
+              />
             ))
           ) : (
             <EmptyState text="找不到符合條件的即時情報，請嘗試其他關鍵字。" />
@@ -248,16 +255,23 @@ function DashboardPanel({ title, tag, children }: DashboardPanelProps) {
 }
 
 type NewsCardProps = Pick<NewsItem, "source" | "title" | "time">;
+type NewsCardActionProps = NewsCardProps & {
+  onClick: () => void;
+};
 
-function NewsCard({ source, title, time }: NewsCardProps) {
+function NewsCard({ source, title, time, onClick }: NewsCardActionProps) {
   return (
-    <div className="bg-white/5 border border-white/5 p-3 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left bg-white/5 border border-white/5 p-3 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+    >
       <div className="flex justify-between items-center mb-1">
         <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded font-bold uppercase">{source}</span>
         <span className="text-[8px] text-gray-600 italic">{time}</span>
       </div>
       <p className="text-[10px] leading-relaxed text-gray-300 line-clamp-2">{title}</p>
-    </div>
+    </button>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import React, { memo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { CameraControls } from "@react-three/drei";
 import Globe from "./Globe";
 import { tabToTransportMode, useTerminalStore } from "./terminal/store";
 
@@ -42,15 +42,13 @@ function GlobeSceneView() {
         }}
       >
         <Globe transportMode={transportMode} autoRotate={!isInteracting} />
-        <OrbitControls
+        <CameraControls
           makeDefault
-          enablePan={false}
-          enableZoom={false}
+          dollySpeed={0}
           minDistance={6}
           maxDistance={6}
-          rotateSpeed={0.7}
-          onStart={() => setIsInteracting(true)}
-          onEnd={() => setIsInteracting(false)}
+          onControlStart={() => setIsInteracting(true)}
+          onControlEnd={() => setIsInteracting(false)}
         />
       </Canvas>
 

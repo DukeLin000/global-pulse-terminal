@@ -5,12 +5,19 @@ export type RegionOption = {
   label: string;
 };
 
+export type FocusCoordinates = {
+  lat: number;
+  lon: number;
+  label: string;
+};
+
 export type NewsItem = {
   source: string;
   title: string;
   time: string;
   tags: string[];
   regions: RegionKey[];
+  focusCoordinates?: FocusCoordinates;
 };
 
 export type ConflictItem = {

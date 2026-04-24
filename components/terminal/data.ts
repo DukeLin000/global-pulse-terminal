@@ -9,11 +9,20 @@ export const REGION_OPTIONS: RegionOption[] = [
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    source: "Frontline Desk",
+    title: "【歐陸戰況】烏克蘭東部前線再現高密度無人機偵察與炮擊活動。",
+    time: "15m",
+    tags: ["烏克蘭", "歐洲", "軍事"],
+    regions: ["europe"],
+    focusCoordinates: { lat: 48.3, lon: 31.1, label: "Ukraine" },
+  },
+  {
     source: "ARJ News",
     title: "【地緣觀察】台海區域電子作戰干擾強度增加，導航系統穩定性受阻。",
     time: "1h",
     tags: ["地緣政治", "台海", "軍事"],
     regions: ["asia-pacific"],
+    focusCoordinates: { lat: 24.0, lon: 119.0, label: "Taiwan Strait" },
   },
   {
     source: "WHSR News",
@@ -21,6 +30,7 @@ export const NEWS_ITEMS: NewsItem[] = [
     time: "3h",
     tags: ["能源", "中東", "金融市場"],
     regions: ["middle-east"],
+    focusCoordinates: { lat: 31.5, lon: 34.4, label: "Gaza" },
   },
   {
     source: "Market Pulse",

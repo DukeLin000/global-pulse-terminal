@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useMemo, useState, useCallback } from "react";
+import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
@@ -88,17 +88,63 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     position: THREE.Vector3;
     cameraPosition: THREE.Vector3;
   } | null>(null);
-  const controls = useThree((state) => state.controls as unknown as { target: THREE.Vector3 } | undefined);
+  const controls = useThree(
+    (state) =>
+      state.controls as unknown as
+        | {
+            target: THREE.Vector3;
+            setLookAt: (
+              px: number,
+              py: number,
+              pz: number,
+              tx: number,
+              ty: number,
+              tz: number,
+              enableTransition?: boolean
+            ) => void;
+          }
+        | undefined
+  );
   const camera = useThree((state) => state.camera);
   const selectedRegion = useTerminalStore((state) => state.selectedRegion);
+  const focusCoordinates = useTerminalStore((state) => state.focusCoordinates);
+  const setFocusCoordinates = useTerminalStore((state) => state.setFocusCoordinates);
   const defaultCameraPosition = useMemo(() => new THREE.Vector3(0, 0, 6), []);
   const defaultCameraTarget = useMemo(() => new THREE.Vector3(0, 0, 0), []);
   const resetToDefaultView = useCallback(() => {
     setSelectedConflict(null);
-    camera.position.copy(defaultCameraPosition);
-    if (controls) controls.target.copy(defaultCameraTarget);
-    camera.lookAt(defaultCameraTarget);
+    if (controls) {
+      controls.setLookAt(
+        defaultCameraPosition.x,
+        defaultCameraPosition.y,
+        defaultCameraPosition.z,
+        defaultCameraTarget.x,
+        defaultCameraTarget.y,
+        defaultCameraTarget.z,
+        true
+      );
+    } else {
+      camera.position.copy(defaultCameraPosition);
+      camera.lookAt(defaultCameraTarget);
+    }
   }, [camera, controls, defaultCameraPosition, defaultCameraTarget]);
+
+  useEffect(() => {
+    if (!focusCoordinates || !controls) return;
+    queueMicrotask(() => setSelectedConflict(null));
+    const target = latLonToVec3(focusCoordinates.lat, focusCoordinates.lon, 2.7);
+    const cameraPosition = target.clone().normalize().multiplyScalar(4.1);
+    controls.setLookAt(
+      cameraPosition.x,
+      cameraPosition.y,
+      cameraPosition.z,
+      target.x,
+      target.y,
+      target.z,
+      true
+    );
+    setFocusCoordinates(null);
+  }, [controls, focusCoordinates, setFocusCoordinates]);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
@@ -194,15 +240,6 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       dot.position.copy(curve.getPoint(progress));
     });
 
-    if (activeSelectedConflict) {
-      camera.position.lerp(activeSelectedConflict.cameraPosition, 0.06);
-      if (controls) controls.target.lerp(activeSelectedConflict.position, 0.08);
-      camera.lookAt(activeSelectedConflict.position);
-    } else {
-      camera.position.lerp(defaultCameraPosition, 0.04);
-      if (controls) controls.target.lerp(defaultCameraTarget, 0.06);
-      camera.lookAt(defaultCameraTarget);
-    }
   });
 
   return (
@@ -373,6 +410,15 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
                   position: focus,
                   cameraPosition,
                 });
+                controls?.setLookAt(
+                  cameraPosition.x,
+                  cameraPosition.y,
+                  cameraPosition.z,
+                  focus.x,
+                  focus.y,
+                  focus.z,
+                  true
+                );
               }}
             >
               {/* 核心光點 */}

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES, NEWS_ITEMS } from "./data";
 import { fetchTerminalSnapshot } from "./api";
-import type { ConflictItem, LiveNewsSource, NewsItem, RegionKey } from "./types";
+import type { ConflictItem, FocusCoordinates, LiveNewsSource, NewsItem, RegionKey } from "./types";
 
 type TransportMode = "default" | "flight" | "shipping" | "allTransport";
 
@@ -21,6 +21,7 @@ type TerminalStore = {
   isDataLoading: boolean;
   dataError: string | null;
   lastFetchedAt: number | null;
+  focusCoordinates: FocusCoordinates | null;
   setActiveTab: (tab: string) => void;
   toggleMenu: (menuName: string) => void;
   setSearchTerm: (value: string) => void;
@@ -32,6 +33,7 @@ type TerminalStore = {
   refreshTerminalData: () => Promise<void>;
   startPolling: (intervalMs?: number) => void;
   stopPolling: () => void;
+  setFocusCoordinates: (payload: FocusCoordinates | null) => void;
 };
 
 const defaultExpanded = ["即時新聞", "交通狀態", "投資中心", "報告中心", "地區焦點"];
@@ -53,6 +55,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   isDataLoading: false,
   dataError: null,
   lastFetchedAt: null,
+  focusCoordinates: null,
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleMenu: (menuName) =>
     set((state) => ({
@@ -110,6 +113,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     clearInterval(pollTimer);
     pollTimer = null;
   },
+  setFocusCoordinates: (payload) => set({ focusCoordinates: payload }),
 }));
 
 export function tabToTransportMode(activeTab: string): TransportMode {

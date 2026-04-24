@@ -35,18 +35,24 @@ const CONFLICT_ZONES = [
   { name: "Taiwan Strait", lat: 24.0, lon: 119.0, tier: 2 },
 ];
 
+type FlightDotPath = {
+  curve: THREE.QuadraticBezierCurve3;
+  offset: number;
+  speed: number;
+};
+
 export default function Globe() {
   const globeGroup = useRef<THREE.Group>(null);
-  const flightDotsRef = useRef<THREE.Mesh[]>([]);
+  const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
   // ----------------------------------------------------------------------
   const { lines, dots } = useMemo(() => {
     const linesArr: THREE.BufferGeometry[] = [];
-    const dotsArr: any[] = [];
+    const dotsArr: FlightDotPath[] = [];
 
-    FLIGHT_ROUTES.forEach((route) => {
+    FLIGHT_ROUTES.forEach((route, index) => {
       const start = latLonToVec3(route.from[0], route.from[1], 2.5);
       const end = latLonToVec3(route.to[0], route.to[1], 2.5);
       
@@ -55,8 +61,10 @@ export default function Globe() {
       const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
       
       linesArr.push(new THREE.BufferGeometry().setFromPoints(curve.getPoints(50)));
-      // 給予每台飛機隨機的速度與初始位置偏移
-      dotsArr.push({ curve, offset: Math.random(), speed: 0.05 + Math.random() * 0.05 });
+      // 以固定序號產生可重現的偏移與速度，避免渲染階段使用非純函式
+      const offset = (index * 0.237) % 1;
+      const speed = 0.05 + ((index * 0.113) % 0.05);
+      dotsArr.push({ curve, offset, speed });
     });
 
     return { lines: linesArr, dots: dotsArr };
@@ -121,7 +129,12 @@ export default function Globe() {
         ))}
 
         {dots.map((_, i) => (
-          <mesh key={`flight-dot-${i}`} ref={(el) => (flightDotsRef.current[i] = el!)}>
+          <mesh
+            key={`flight-dot-${i}`}
+            ref={(el) => {
+              flightDotsRef.current[i] = el;
+            }}
+          >
             <sphereGeometry args={[0.02, 8, 8]} />
             <meshBasicMaterial color="#88e0ff" />
           </mesh>

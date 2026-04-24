@@ -166,7 +166,7 @@ export default function Globe({ transportMode }: GlobeProps) {
 
       <mesh>
         <sphereGeometry args={[2.505, 32, 16]} />
-        <meshBasicMaterial color="#3060a0" wireframe transparent opacity={0.15} />
+        <meshBasicMaterial color="#f59e0b" wireframe transparent opacity={0.3} />
       </mesh>
 
       <mesh scale={1.1}>
@@ -188,7 +188,7 @@ export default function Globe({ transportMode }: GlobeProps) {
           {lines.map((geo, i) => (
             <line key={`flight-line-${i}`}>
               <primitive object={geo} attach="geometry" />
-              <lineBasicMaterial color="#64b4ff" transparent opacity={0.25} />
+              <lineBasicMaterial color="#67e8f9" transparent opacity={0.35} />
             </line>
           ))}
 
@@ -200,7 +200,7 @@ export default function Globe({ transportMode }: GlobeProps) {
               }}
             >
               <sphereGeometry args={[0.02, 8, 8]} />
-              <meshBasicMaterial color="#88e0ff" />
+              <meshBasicMaterial color="#67e8f9" />
             </mesh>
           ))}
 
@@ -218,7 +218,7 @@ export default function Globe({ transportMode }: GlobeProps) {
               onPointerOut={() => setHoverInfo(null)}
             >
               <sphereGeometry args={[0.05, 10, 10]} />
-              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.35} />
+              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.45} />
             </mesh>
           ))}
         </group>
@@ -229,7 +229,7 @@ export default function Globe({ transportMode }: GlobeProps) {
           {shippingLines.map((geo, i) => (
             <line key={`shipping-line-${i}`}>
               <primitive object={geo} attach="geometry" />
-              <lineBasicMaterial color="#34d399" transparent opacity={0.3} />
+              <lineBasicMaterial color="#f59e0b" transparent opacity={0.45} />
             </line>
           ))}
 
@@ -240,8 +240,8 @@ export default function Globe({ transportMode }: GlobeProps) {
                 shippingDotsRef.current[i] = el;
               }}
             >
-              <sphereGeometry args={[0.028, 8, 8]} />
-              <meshBasicMaterial color="#6ee7b7" />
+              <boxGeometry args={[0.03, 0.03, 0.03]} />
+              <meshBasicMaterial color="#fbbf24" />
             </mesh>
           ))}
 
@@ -258,8 +258,8 @@ export default function Globe({ transportMode }: GlobeProps) {
               }
               onPointerOut={() => setHoverInfo(null)}
             >
-              <sphereGeometry args={[0.055, 10, 10]} />
-              <meshBasicMaterial color="#6ee7b7" transparent opacity={0.35} />
+              <octahedronGeometry args={[0.06, 0]} />
+              <meshBasicMaterial color="#f59e0b" transparent opacity={0.45} />
             </mesh>
           ))}
         </group>

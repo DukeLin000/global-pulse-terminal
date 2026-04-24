@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useMemo, useState } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -60,14 +60,11 @@ const SHIPPING_ROUTES = [
   { fromName: "Hong Kong", from: [22.3, 114.2], toName: "Miami", to: [25.8, -80.2] },
 ];
 
-const EARTH_TEXTURE_URL = "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";
-
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const elapsedRef = useRef(0);
-  const earthMap = useLoader(THREE.TextureLoader, EARTH_TEXTURE_URL);
   const [hoverInfo, setHoverInfo] = useState<{
     title: string;
     detail: string;
@@ -169,11 +166,11 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       <mesh>
         <sphereGeometry args={[2.5, 64, 64]} />
         <meshStandardMaterial
-          map={earthMap}
+          color="#10213d"
           emissive="#0a1428"
-          emissiveIntensity={0.35}
-          roughness={0.8}
-          metalness={0.05}
+          emissiveIntensity={0.45}
+          roughness={0.92}
+          metalness={0.02}
           transparent
           opacity={0.95}
         />

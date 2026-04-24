@@ -12,6 +12,18 @@ type GlobeSceneProps = {
 export default function GlobeScene({ transportMode }: GlobeSceneProps) {
   const [isInteracting, setIsInteracting] = React.useState(false);
 
+  React.useEffect(() => {
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      const firstArg = typeof args[0] === "string" ? args[0] : "";
+      if (firstArg.includes("THREE.Clock: This module has been deprecated")) return;
+      originalWarn(...args);
+    };
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
   return (
     // 關鍵修正：確保容器是絕對定位且撐滿，並設定 pointer-events-auto 以便操作地球
     <div className="w-full h-full relative z-0">

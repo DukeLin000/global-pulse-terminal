@@ -71,6 +71,8 @@ const SHIPPING_ROUTES = [
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
+  const cyberRingARef = useRef<THREE.Mesh>(null);
+  const cyberRingBRef = useRef<THREE.Mesh>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const elapsedRef = useRef(0);
@@ -218,6 +220,8 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     elapsedRef.current += delta;
     const t = elapsedRef.current;
     if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
+    if (cyberRingARef.current) cyberRingARef.current.rotation.z += delta * 0.2;
+    if (cyberRingBRef.current) cyberRingBRef.current.rotation.z -= delta * 0.16;
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;
@@ -279,12 +283,12 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
 
       <mesh ref={cyberRingARef} rotation={[Math.PI / 2.8, 0.4, 0]}>
         <torusGeometry args={[2.85, 0.01, 12, 160]} />
-        <meshBasicMaterial color="#ff4ecd" transparent opacity={0.55} blending={THREE.AdditiveBlending} />
+        <meshBasicMaterial color="#ff4ecd" transparent opacity={0.5} />
       </mesh>
 
-      <mesh ref={cyberRingBRef} rotation={[Math.PI / 3.6, 1.2, 0]}>
-        <torusGeometry args={[3.0, 0.009, 10, 120]} />
-        <meshBasicMaterial color="#00e5ff" transparent opacity={0.45} blending={THREE.AdditiveBlending} />
+      <mesh ref={cyberRingBRef} rotation={[Math.PI / 2.4, -0.5, 0.3]}>
+        <torusGeometry args={[3.0, 0.008, 12, 180]} />
+        <meshBasicMaterial color="#00e5ff" transparent opacity={0.36} />
       </mesh>
 
       {/* =========================================

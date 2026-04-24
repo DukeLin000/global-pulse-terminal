@@ -4,7 +4,11 @@ import React from 'react';
 import { Canvas } from "@react-three/fiber";
 import Globe from "./Globe";
 
-export default function GlobeScene() {
+type GlobeSceneProps = {
+  transportMode: "default" | "flight" | "shipping" | "allTransport";
+};
+
+export default function GlobeScene({ transportMode }: GlobeSceneProps) {
   return (
     // 關鍵修正：確保容器是絕對定位且撐滿，並設定 pointer-events-auto 以便操作地球
     <div className="w-full h-full relative z-0">
@@ -24,7 +28,7 @@ export default function GlobeScene() {
         }}
       >
         {/* 這裡是 3D 世界 */}
-        <Globe />
+        <Globe transportMode={transportMode} />
       </Canvas>
     </div>
   );

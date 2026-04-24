@@ -17,6 +17,10 @@ function latLonToVec3(lat: number, lon: number, r: number) {
   );
 }
 
+function latLonPathToPoints(path: Array<[number, number]>, radius: number) {
+  return path.map(([lat, lon]) => latLonToVec3(lat, lon, radius));
+}
+
 // ----------------------------------------------------------------------
 // 1. 獨立的資料集：飛行航班 (Flight Routes)
 // ----------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { ConflictItem, LiveNewsSource, NewsItem } from "./types";
+import { EconomicAdvancedChart, RiskTrendAdvancedChart } from "./AdvancedCharts";
 
 type RightPanelProps = {
   activeTab: string;
@@ -128,11 +129,8 @@ export default function RightPanel({
           </div>
           <div className="flex-[1.2] space-y-2">
             <div className="text-[9px] text-gray-500 uppercase">當前風險趨勢</div>
-            <div className="h-24 bg-blue-500/5 border border-white/5 rounded relative overflow-hidden shrink-0">
-              <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 50">
-                <path d="M0,45 L20,30 L40,40 L60,15 L80,25 L100,5 L100,50 L0,50 Z" fill="rgba(59,130,246,0.1)" />
-                <path d="M0,45 L20,30 L40,40 L60,15 L80,25 L100,5" fill="none" stroke="#3b82f6" strokeWidth="1" />
-              </svg>
+            <div className="h-24 rounded relative overflow-hidden shrink-0">
+              <RiskTrendAdvancedChart width={200} height={96} />
             </div>
           </div>
         </div>
@@ -163,10 +161,8 @@ export default function RightPanel({
       </DashboardPanel>
 
       <DashboardPanel title="GLOBAL ECONOMIC INDICATORS">
-        <div className="h-20 bg-white/5 rounded border border-white/5 mb-2 overflow-hidden relative">
-          <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 40">
-            <path d="M0,35 L25,25 L50,30 L75,10 L100,5" fill="none" stroke="#3b82f6" strokeWidth="1" />
-          </svg>
+        <div className="h-28 rounded mb-2 overflow-hidden relative">
+          <EconomicAdvancedChart width={320} height={112} />
         </div>
         <table className="w-full text-[8px] text-gray-500">
           <tbody>

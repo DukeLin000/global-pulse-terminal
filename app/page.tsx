@@ -111,10 +111,9 @@ export default function Terminal() {
   };
 
   const globeTransportMode = useMemo(() => {
-    if (activeTab.startsWith("交通狀態/飛航")) return "flight";
-    if (activeTab.startsWith("交通狀態/海運")) return "shipping";
-    if (activeTab.startsWith("交通狀態/")) return "allTransport";
-    return "default";
+    if (activeTab === "交通狀態/航班分析") return "flight";
+    if (activeTab === "交通狀態/海運分析") return "shipping";
+    return "allTransport";
   }, [activeTab]);
 
   return (

@@ -62,8 +62,6 @@ const SHIPPING_ROUTES = [
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
-  const cyberRingARef = useRef<THREE.Mesh>(null);
-  const cyberRingBRef = useRef<THREE.Mesh>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const elapsedRef = useRef(0);
@@ -141,8 +139,6 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     elapsedRef.current += delta;
     const t = elapsedRef.current;
     if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
-    if (cyberRingARef.current) cyberRingARef.current.rotation.z += 0.004;
-    if (cyberRingBRef.current) cyberRingBRef.current.rotation.x -= 0.003;
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;

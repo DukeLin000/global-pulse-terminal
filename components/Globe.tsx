@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useMemo, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
 import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -60,36 +60,13 @@ const SHIPPING_ROUTES = [
   { fromName: "Hong Kong", from: [22.3, 114.2], toName: "Miami", to: [25.8, -80.2] },
 ];
 
-// 粗略的大陸輪廓（用於建立類似終端地圖邊界視覺）
-const CONTINENT_OUTLINES: Array<Array<[number, number]>> = [
-  // 北美洲
-  [
-    [72, -165], [65, -140], [58, -120], [52, -108], [45, -97], [31, -82], [20, -99],
-    [18, -110], [28, -118], [40, -125], [55, -140], [62, -155], [72, -165],
-  ],
-  // 南美洲
-  [
-    [12, -81], [8, -70], [0, -66], [-10, -60], [-22, -56], [-35, -60], [-50, -70],
-    [-55, -74], [-45, -66], [-28, -56], [-12, -50], [0, -54], [8, -63], [12, -81],
-  ],
-  // 歐亞非（簡化）
-  [
-    [70, -10], [62, 15], [58, 35], [55, 60], [60, 90], [55, 120], [45, 140], [30, 130],
-    [20, 110], [10, 100], [20, 80], [30, 65], [35, 45], [33, 25], [30, 10], [25, 0],
-    [15, -5], [5, 5], [-5, 20], [-20, 25], [-35, 20], [-35, 10], [-20, 5], [-5, 0],
-    [10, -10], [25, -15], [40, -5], [50, 5], [60, 0], [70, -10],
-  ],
-  // 澳洲
-  [
-    [-11, 113], [-20, 122], [-30, 138], [-36, 146], [-40, 153], [-28, 153], [-18, 145],
-    [-13, 130], [-11, 113],
-  ],
-];
+const EARTH_TEXTURE_URL = "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
+  const earthMap = useLoader(THREE.TextureLoader, EARTH_TEXTURE_URL);
   const [hoverInfo, setHoverInfo] = useState<{
     title: string;
     detail: string;
@@ -154,12 +131,6 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     return { shippingLines: linesArr, shippingDots: dotsArr };
   }, []);
 
-  const continentLines = useMemo(() => {
-    return CONTINENT_OUTLINES.map((path) =>
-      new THREE.BufferGeometry().setFromPoints(latLonPathToPoints(path, 2.515))
-    );
-  }, []);
-
   const showFlight = transportMode === "default" || transportMode === "flight" || transportMode === "allTransport";
   const showShipping = transportMode === "shipping" || transportMode === "allTransport";
 
@@ -195,15 +166,20 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       ========================================= */}
       <mesh>
         <sphereGeometry args={[2.5, 64, 64]} />
-        <meshPhongMaterial 
-          color="#0a1428" emissive="#020510" specular="#112244" 
-          shininess={10} transparent opacity={0.9} 
+        <meshStandardMaterial
+          map={earthMap}
+          emissive="#0a1428"
+          emissiveIntensity={0.35}
+          roughness={0.8}
+          metalness={0.05}
+          transparent
+          opacity={0.95}
         />
       </mesh>
 
       <mesh>
         <sphereGeometry args={[2.505, 32, 16]} />
-        <meshBasicMaterial color="#f59e0b" wireframe transparent opacity={0.3} />
+        <meshBasicMaterial color="#f59e0b" wireframe transparent opacity={0.18} />
       </mesh>
 
       <mesh scale={1.1}>
@@ -217,14 +193,90 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
         />
       </mesh>
 
-      <group name="MapOutlineLayer">
-        {continentLines.map((geo, i) => (
-          <line key={`continent-line-${i}`}>
-            <primitive object={geo} attach="geometry" />
-            <lineBasicMaterial color="#f59e0b" transparent opacity={0.75} />
-          </line>
-        ))}
-      </group>
+      {/* =========================================
+          圖層一：飛行航班 (藍色軌跡與亮點)
+      ========================================= */}
+      {showFlight && (
+        <group name="FlightLayer">
+          {lines.map((geo, i) => (
+            <line key={`flight-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#67e8f9" transparent opacity={0.35} />
+            </line>
+          ))}
+
+          {dots.map((_, i) => (
+            <mesh
+              key={`flight-dot-${i}`}
+              ref={(el) => {
+                flightDotsRef.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#67e8f9" />
+            </mesh>
+          ))}
+
+          {dots.map((item, i) => (
+            <mesh
+              key={`flight-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <sphereGeometry args={[0.05, 10, 10]} />
+              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.22} />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {showShipping && (
+        <group name="ShippingLayer">
+          {shippingLines.map((geo, i) => (
+            <line key={`shipping-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#f59e0b" transparent opacity={0.45} />
+            </line>
+          ))}
+
+          {shippingDots.map((_, i) => (
+            <mesh
+              key={`shipping-dot-${i}`}
+              ref={(el) => {
+                shippingDotsRef.current[i] = el;
+              }}
+            >
+              <boxGeometry args={[0.03, 0.03, 0.03]} />
+              <meshBasicMaterial color="#fbbf24" />
+            </mesh>
+          ))}
+
+          {shippingDots.map((item, i) => (
+            <mesh
+              key={`shipping-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <octahedronGeometry args={[0.06, 0]} />
+              <meshBasicMaterial color="#f59e0b" transparent opacity={0.22} />
+            </mesh>
+          ))}
+        </group>
+      )}
 
       {/* =========================================
           圖層一：飛行航班 (藍色軌跡與亮點)

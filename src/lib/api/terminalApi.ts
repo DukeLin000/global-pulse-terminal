@@ -4,9 +4,8 @@ import type {
   AlertItem,
   ConflictItem,
   ConflictZone,
-  GlobeRoute,
   NewsItem,
-  RegionKey,
+  RouteLayers,
   TerminalSnapshot,
 } from "@/src/types/terminal";
 
@@ -43,12 +42,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function getTerminalSnapshot(region?: RegionKey) {
+export function getTerminalSnapshot(region?: string) {
   return request<TerminalSnapshot>(`/api/v1/terminal/snapshot${toQuery({ region })}`);
 }
 
 export function getNews(params?: {
-  region?: RegionKey;
+  region?: string;
   q?: string;
   limit?: number;
   cursor?: string;
@@ -57,7 +56,7 @@ export function getNews(params?: {
 }
 
 export function getConflicts(params?: {
-  region?: RegionKey;
+  region?: string;
   minScore?: number;
   sort?: "score" | "updatedAt";
 }) {
@@ -65,14 +64,14 @@ export function getConflicts(params?: {
 }
 
 export function getGlobeRoutes(mode?: "flight" | "shipping" | "all") {
-  return request<GlobeRoute[]>(`/api/v1/globe/routes${toQuery({ mode })}`);
+  return request<RouteLayers>(`/api/v1/globe/routes${toQuery({ mode })}`);
 }
 
-export function getConflictZones(region?: RegionKey) {
+export function getConflictZones(region?: string) {
   return request<ConflictZone[]>(`/api/v1/globe/conflict-zones${toQuery({ region })}`);
 }
 
-export function getAlerts(params?: { level?: "warning" | "critical"; limit?: number }) {
+export function getAlerts(params?: { level?: string; limit?: number }) {
   return request<AlertItem[]>(`/api/v1/alerts${toQuery(params)}`);
 }
 

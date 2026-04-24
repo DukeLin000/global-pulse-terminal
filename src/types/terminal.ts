@@ -1,34 +1,27 @@
-export type RegionKey = "global" | "middle-east" | "europe" | "asia-pacific";
-
-export type FocusCoordinates = {
-  lat: number;
-  lon: number;
-  label: string;
-};
-
-export type AlertLevel = "warning" | "critical";
-
 export type NewsItem = {
-  id?: string;
-  source: string;
+  id: string;
   title: string;
-  time: string;
-  tags: string[];
-  regions: RegionKey[];
-  focusCoordinates?: FocusCoordinates;
-  publishedAt?: string;
+  region: string;
+  summary: string;
+  focus?: {
+    lat: number;
+    lon: number;
+  };
+  updatedAt: string;
+  breaking: boolean;
 };
 
 export type ConflictItem = {
-  id?: string;
+  id: string;
   name: string;
   score: number;
-  region: RegionKey;
-  updatedAt?: string;
+  region: string;
+  updatedAt: string;
+  detail: string;
 };
 
 export type LiveNewsSource = {
-  id?: string;
+  id: string;
   label: string;
   url: string;
   embedUrl: string;
@@ -36,48 +29,62 @@ export type LiveNewsSource = {
 };
 
 export type GlobeRoute = {
-  id?: string;
-  mode: "flight" | "shipping";
-  fromName: string;
-  from: [number, number];
-  toName: string;
-  to: [number, number];
+  id: string;
+  from: {
+    label: string;
+    lat: number;
+    lon: number;
+  };
+  to: {
+    label: string;
+    lat: number;
+    lon: number;
+  };
+  mode: string;
+  label: string;
 };
 
 export type ConflictZone = {
-  id?: string;
   name: string;
   lat: number;
   lon: number;
-  tier: 1 | 2;
-  region: RegionKey;
-  detail?: string;
+  tier: number;
+  region: string;
+  detail: string;
 };
 
 export type AlertItem = {
   id: string;
-  level: AlertLevel;
-  title: string;
+  level: string;
   message: string;
-  createdAt: number;
-  acknowledged?: boolean;
+  region: string;
+  createdAt: string;
+  status: string;
+  ackBy: string | null;
+  ackAt: string | null;
 };
 
 export type AlertAckRequest = {
   alertId: string;
-  ackBy?: string;
+  ackBy: string;
 };
 
 export type AlertAckResponse = {
-  ok: boolean;
   alertId: string;
-  acknowledgedAt?: number;
+  status: string;
+  ackBy: string;
+  ackAt: string;
 };
+
+export type RouteLayers = Record<"flight" | "shipping", GlobeRoute[]>;
 
 export type TerminalSnapshot = {
   newsItems: NewsItem[];
   conflictItems: ConflictItem[];
   liveNewsSources: LiveNewsSource[];
+  routeLayers: RouteLayers;
+  alerts: AlertItem[];
+  serverTime: number;
   fetchedAt: number;
 };
 
@@ -92,4 +99,29 @@ export type StreamEvent<T = unknown> = {
   type: StreamEventType;
   data: T;
   ts?: number;
+};
+
+export type NewsViewModel = {
+  id: string;
+  title: string;
+  source: string;
+  time: string;
+  tags: string[];
+  regions: string[];
+  focusCoordinates?: {
+    lat: number;
+    lon: number;
+    label: string;
+  };
+  breaking: boolean;
+};
+
+export type AlertViewModel = {
+  id: string;
+  level: string;
+  title: string;
+  message: string;
+  region: string;
+  createdAt: string;
+  acknowledged: boolean;
 };

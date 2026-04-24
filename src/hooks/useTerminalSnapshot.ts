@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getTerminalSnapshot } from "@/src/lib/api/terminalApi";
-import type { RegionKey, TerminalSnapshot } from "@/src/types/terminal";
+import type { TerminalSnapshot } from "@/src/types/terminal";
 
 type UseTerminalSnapshotOptions = {
-  region?: RegionKey;
+  region?: string;
   intervalMs?: number;
   enabled?: boolean;
 };

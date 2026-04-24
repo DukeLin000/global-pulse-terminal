@@ -5,7 +5,11 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/terminal/Sidebar";
 import TopHeader from "@/components/terminal/TopHeader";
 import RightPanel from "@/components/terminal/RightPanel";
-import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES, NEWS_ITEMS } from "@/components/terminal/data";
+import {
+  CONFLICT_ITEMS as TERMINAL_CONFLICT_ITEMS,
+  LIVE_NEWS_SOURCES as TERMINAL_LIVE_NEWS_SOURCES,
+  NEWS_ITEMS as TERMINAL_NEWS_ITEMS,
+} from "@/components/terminal/data";
 import type { LiveNewsSource } from "@/components/terminal/types";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
@@ -80,19 +84,21 @@ export default function Terminal() {
   };
 
   const filteredNews = useMemo(() => {
-    if (!searchTerm.trim()) return NEWS_ITEMS;
+    if (!searchTerm.trim()) return TERMINAL_NEWS_ITEMS;
     const query = searchTerm.toLowerCase();
-    return NEWS_ITEMS.filter((item) => [item.source, item.title, ...item.tags].join(" ").toLowerCase().includes(query));
+    return TERMINAL_NEWS_ITEMS.filter((item) =>
+      [item.source, item.title, ...item.tags].join(" ").toLowerCase().includes(query)
+    );
   }, [searchTerm]);
 
   const filteredConflicts = useMemo(() => {
-    if (!searchTerm.trim()) return CONFLICT_ITEMS;
+    if (!searchTerm.trim()) return TERMINAL_CONFLICT_ITEMS;
     const query = searchTerm.toLowerCase();
-    return CONFLICT_ITEMS.filter((item) => item.name.toLowerCase().includes(query));
+    return TERMINAL_CONFLICT_ITEMS.filter((item) => item.name.toLowerCase().includes(query));
   }, [searchTerm]);
 
   const selectedLiveNewsSource = useMemo(
-    () => LIVE_NEWS_SOURCES.find((source) => activeTab === `新聞直播/${source.label}`),
+    () => TERMINAL_LIVE_NEWS_SOURCES.find((source) => activeTab === `新聞直播/${source.label}`),
     [activeTab]
   );
 
@@ -108,7 +114,7 @@ export default function Terminal() {
         expanded={expanded}
         onToggleMenu={toggleMenu}
         onSetActiveTab={setActiveTab}
-        liveNewsSources={LIVE_NEWS_SOURCES}
+        liveNewsSources={TERMINAL_LIVE_NEWS_SOURCES}
         onSelectLiveNews={selectLiveNews}
       />
 

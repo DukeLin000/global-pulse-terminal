@@ -1,22 +1,24 @@
 "use client";
 
 import type { RefObject } from "react";
+import { useTerminalStore } from "./store";
 
 type TopHeaderProps = {
-  activeTab: string;
-  searchTerm: string;
-  onSearchTermChange: (value: string) => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
 };
 
-export default function TopHeader({ activeTab, searchTerm, onSearchTermChange, searchInputRef }: TopHeaderProps) {
+export default function TopHeader({ searchInputRef }: TopHeaderProps) {
+  const activeTab = useTerminalStore((state) => state.activeTab);
+  const searchTerm = useTerminalStore((state) => state.searchTerm);
+  const setSearchTerm = useTerminalStore((state) => state.setSearchTerm);
+
   return (
     <header className="h-14 border-b border-white/5 flex items-center px-4 gap-4 z-20 bg-[#05070a]/80 backdrop-blur-xl shrink-0">
       <div className="relative flex-1 max-w-sm">
         <input
           ref={searchInputRef}
           value={searchTerm}
-          onChange={(event) => onSearchTermChange(event.target.value)}
+          onChange={(event) => setSearchTerm(event.target.value)}
           className="w-full bg-white/5 border border-white/10 rounded-lg py-1.5 pl-8 pr-4 text-[10px] outline-none"
           placeholder="搜尋全球數據...（按 / 快速聚焦）"
         />

@@ -1,25 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { LiveNewsSource } from "./types";
+import { LIVE_NEWS_SOURCES, REGION_OPTIONS } from "./data";
+import { useTerminalStore } from "./store";
 
-type SidebarProps = {
-  activeTab: string;
-  expanded: string[];
-  onToggleMenu: (menuName: string) => void;
-  onSetActiveTab: (tab: string) => void;
-  liveNewsSources: LiveNewsSource[];
-  onSelectLiveNews: (source: LiveNewsSource) => void;
-};
+export default function Sidebar() {
+  const activeTab = useTerminalStore((state) => state.activeTab);
+  const expanded = useTerminalStore((state) => state.expandedMenus);
+  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
+  const setActiveTab = useTerminalStore((state) => state.setActiveTab);
+  const toggleMenu = useTerminalStore((state) => state.toggleMenu);
+  const setSelectedRegion = useTerminalStore((state) => state.setSelectedRegion);
+  const openLivePopup = useTerminalStore((state) => state.openLivePopup);
 
-export default function Sidebar({
-  activeTab,
-  expanded,
-  onToggleMenu,
-  onSetActiveTab,
-  liveNewsSources,
-  onSelectLiveNews,
-}: SidebarProps) {
   return (
     <nav className="w-64 h-full bg-[#05070a] border-r border-white/5 flex flex-col z-30 shadow-2xl shrink-0">
       <div className="p-6 flex items-center gap-3">
@@ -38,14 +31,37 @@ export default function Sidebar({
           label="地緣政治"
           sub="地緣政治動態"
           active={activeTab === "地緣政治"}
-          onClick={() => onSetActiveTab("地緣政治")}
+          onClick={() => setActiveTab("地緣政治")}
         />
+
+        <CollapsibleMenu
+          icon="🧭"
+          label="地區焦點"
+          sub="跨模組同步聯動"
+          isOpen={expanded.includes("地區焦點")}
+          onToggle={() => toggleMenu("地區焦點")}
+          active={activeTab.startsWith("地區焦點/")}
+        >
+          {REGION_OPTIONS.map((region) => (
+            <SubNavItem
+              key={region.key}
+              icon="📍"
+              label={region.label}
+              active={selectedRegion === region.key}
+              onClick={() => {
+                setSelectedRegion(region.key);
+                setActiveTab(`地區焦點/${region.key}`);
+              }}
+            />
+          ))}
+        </CollapsibleMenu>
+
         <NavItem
           icon="📈"
           label="金融市場"
           sub="金融市場追蹤"
           active={activeTab === "金融市場"}
-          onClick={() => onSetActiveTab("金融市場")}
+          onClick={() => setActiveTab("金融市場")}
         />
 
         <CollapsibleMenu
@@ -53,17 +69,20 @@ export default function Sidebar({
           label="即時新聞"
           sub="即時快訊監控"
           isOpen={expanded.includes("即時新聞")}
-          onToggle={() => onToggleMenu("即時新聞")}
+          onToggle={() => toggleMenu("即時新聞")}
           active={activeTab.startsWith("新聞直播/")}
         >
           <div className="text-[10px] text-gray-500 px-3 py-1.5 font-bold">新聞直播</div>
-          {liveNewsSources.map((source) => (
+          {LIVE_NEWS_SOURCES.map((source) => (
             <SubNavItem
               key={source.label}
               icon="📡"
               label={source.label}
               active={activeTab === `新聞直播/${source.label}`}
-              onClick={() => onSelectLiveNews(source)}
+              onClick={() => {
+                setActiveTab(`新聞直播/${source.label}`);
+                openLivePopup();
+              }}
             />
           ))}
         </CollapsibleMenu>
@@ -73,7 +92,7 @@ export default function Sidebar({
           label="投資中心"
           sub="智慧投資引擎"
           isOpen={expanded.includes("投資中心")}
-          onToggle={() => onToggleMenu("投資中心")}
+          onToggle={() => toggleMenu("投資中心")}
           active={
             activeTab.includes("分析") ||
             activeTab.includes("市場") ||
@@ -82,12 +101,12 @@ export default function Sidebar({
           }
         >
           <div className="text-[10px] text-gray-500 px-3 py-1.5 font-bold">儀表板</div>
-          <SubNavItem icon="📈" label="宏觀分析" active={activeTab === "宏觀分析"} onClick={() => onSetActiveTab("宏觀分析")} />
-          <SubNavItem icon="📊" label="賽道分析" active={activeTab === "賽道分析"} onClick={() => onSetActiveTab("賽道分析")} />
-          <SubNavItem icon="🔍" label="個股分析" active={activeTab === "個股分析"} onClick={() => onSetActiveTab("個股分析")} />
-          <SubNavItem icon="🔎" label="全市場篩選" active={activeTab === "全市場篩選"} onClick={() => onSetActiveTab("全市場篩選")} />
-          <SubNavItem icon="🌐" label="資產宇宙" active={activeTab === "資產宇宙"} onClick={() => onSetActiveTab("資產宇宙")} />
-          <SubNavItem icon="☯" label="投資組合" active={activeTab === "投資組合"} onClick={() => onSetActiveTab("投資組合")} />
+          <SubNavItem icon="📈" label="宏觀分析" active={activeTab === "宏觀分析"} onClick={() => setActiveTab("宏觀分析")} />
+          <SubNavItem icon="📊" label="賽道分析" active={activeTab === "賽道分析"} onClick={() => setActiveTab("賽道分析")} />
+          <SubNavItem icon="🔍" label="個股分析" active={activeTab === "個股分析"} onClick={() => setActiveTab("個股分析")} />
+          <SubNavItem icon="🔎" label="全市場篩選" active={activeTab === "全市場篩選"} onClick={() => setActiveTab("全市場篩選")} />
+          <SubNavItem icon="🌐" label="資產宇宙" active={activeTab === "資產宇宙"} onClick={() => setActiveTab("資產宇宙")} />
+          <SubNavItem icon="☯" label="投資組合" active={activeTab === "投資組合"} onClick={() => setActiveTab("投資組合")} />
         </CollapsibleMenu>
 
         <CollapsibleMenu
@@ -95,14 +114,14 @@ export default function Sidebar({
           label="交通狀態"
           sub="全球運輸監控"
           isOpen={expanded.includes("交通狀態")}
-          onToggle={() => onToggleMenu("交通狀態")}
+          onToggle={() => toggleMenu("交通狀態")}
           active={activeTab.startsWith("交通狀態/")}
         >
           <div className="text-[10px] text-gray-500 px-3 py-1.5 font-bold">航空與海運</div>
-          <SubNavItem icon="✈️" label="飛航資訊" active={activeTab === "交通狀態/飛航資訊"} onClick={() => onSetActiveTab("交通狀態/飛航資訊")} />
-          <SubNavItem icon="🧭" label="航班分析" active={activeTab === "交通狀態/航班分析"} onClick={() => onSetActiveTab("交通狀態/航班分析")} />
-          <SubNavItem icon="🚢" label="海運資訊" active={activeTab === "交通狀態/海運資訊"} onClick={() => onSetActiveTab("交通狀態/海運資訊")} />
-          <SubNavItem icon="📦" label="海運分析" active={activeTab === "交通狀態/海運分析"} onClick={() => onSetActiveTab("交通狀態/海運分析")} />
+          <SubNavItem icon="✈️" label="飛航資訊" active={activeTab === "交通狀態/飛航資訊"} onClick={() => setActiveTab("交通狀態/飛航資訊")} />
+          <SubNavItem icon="🧭" label="航班分析" active={activeTab === "交通狀態/航班分析"} onClick={() => setActiveTab("交通狀態/航班分析")} />
+          <SubNavItem icon="🚢" label="海運資訊" active={activeTab === "交通狀態/海運資訊"} onClick={() => setActiveTab("交通狀態/海運資訊")} />
+          <SubNavItem icon="📦" label="海運分析" active={activeTab === "交通狀態/海運分析"} onClick={() => setActiveTab("交通狀態/海運分析")} />
         </CollapsibleMenu>
 
         <CollapsibleMenu
@@ -110,17 +129,17 @@ export default function Sidebar({
           label="報告中心"
           sub="情勢分析報告"
           isOpen={expanded.includes("報告中心")}
-          onToggle={() => onToggleMenu("報告中心")}
+          onToggle={() => toggleMenu("報告中心")}
           active={activeTab.includes("報告")}
         >
-          <SubNavItem icon="🌐" label="地緣政治報告" active={activeTab === "地緣政治報告"} onClick={() => onSetActiveTab("地緣政治報告")} />
-          <SubNavItem icon="📈" label="金融市場報告" active={activeTab === "金融市場報告"} onClick={() => onSetActiveTab("金融市場報告")} />
-          <SubNavItem icon="💼" label="投資中心報告" active={activeTab === "投資中心報告"} onClick={() => onSetActiveTab("投資中心報告")} />
+          <SubNavItem icon="🌐" label="地緣政治報告" active={activeTab === "地緣政治報告"} onClick={() => setActiveTab("地緣政治報告")} />
+          <SubNavItem icon="📈" label="金融市場報告" active={activeTab === "金融市場報告"} onClick={() => setActiveTab("金融市場報告")} />
+          <SubNavItem icon="💼" label="投資中心報告" active={activeTab === "投資中心報告"} onClick={() => setActiveTab("投資中心報告")} />
         </CollapsibleMenu>
       </div>
 
       <div className="p-3 border-t border-white/5">
-        <NavItem icon="⚙" label="設定" sub="API 設定" onClick={() => onSetActiveTab("設定")} active={activeTab === "設定"} />
+        <NavItem icon="⚙" label="設定" sub="API 設定" onClick={() => setActiveTab("設定")} active={activeTab === "設定"} />
       </div>
     </nav>
   );

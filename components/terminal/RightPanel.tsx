@@ -1,17 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { ConflictItem, LiveNewsSource, NewsItem } from "./types";
+import { useMemo, type ReactNode } from "react";
+import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES, NEWS_ITEMS, REGION_OPTIONS } from "./data";
+import type { NewsItem, RegionKey } from "./types";
+import { useTerminalStore } from "./store";
 import { EconomicAdvancedChart, RiskTrendAdvancedChart } from "./AdvancedCharts";
-
-type RightPanelProps = {
-  activeTab: string;
-  selectedLiveNewsSource?: LiveNewsSource;
-  filteredNews: NewsItem[];
-  filteredConflicts: ConflictItem[];
-  collapsed: boolean;
-  onToggleCollapsed: () => void;
-};
 
 const FLIGHT_INFO = [
   "Taipei → New York（長程國際線）",
@@ -25,14 +18,38 @@ const SHIPPING_INFO = [
   "Hong Kong → Miami（跨洋高價值貨運）",
 ];
 
-export default function RightPanel({
-  activeTab,
-  selectedLiveNewsSource,
-  filteredNews,
-  filteredConflicts,
-  collapsed,
-  onToggleCollapsed,
-}: RightPanelProps) {
+function isInSelectedRegion(region: RegionKey, targetRegions: RegionKey[]) {
+  return region === "global" || targetRegions.includes(region);
+}
+
+export default function RightPanel() {
+  const activeTab = useTerminalStore((state) => state.activeTab);
+  const searchTerm = useTerminalStore((state) => state.searchTerm);
+  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
+  const globalRiskIndex = useTerminalStore((state) => state.globalRiskIndex);
+  const collapsed = useTerminalStore((state) => state.isRightPanelCollapsed);
+  const toggleRightPanelCollapsed = useTerminalStore((state) => state.toggleRightPanelCollapsed);
+
+  const selectedLiveNewsSource = useMemo(
+    () => LIVE_NEWS_SOURCES.find((source) => activeTab === `新聞直播/${source.label}`),
+    [activeTab]
+  );
+
+  const filteredNews = useMemo(() => {
+    const withRegion = NEWS_ITEMS.filter((item) => isInSelectedRegion(selectedRegion, item.regions));
+    if (!searchTerm.trim()) return withRegion;
+    const query = searchTerm.toLowerCase();
+    return withRegion.filter((item) => [item.source, item.title, ...item.tags].join(" ").toLowerCase().includes(query));
+  }, [searchTerm, selectedRegion]);
+
+  const filteredConflicts = useMemo(() => {
+    const withRegion = CONFLICT_ITEMS.filter((item) => selectedRegion === "global" || item.region === selectedRegion);
+    if (!searchTerm.trim()) return withRegion;
+    const query = searchTerm.toLowerCase();
+    return withRegion.filter((item) => item.name.toLowerCase().includes(query));
+  }, [searchTerm, selectedRegion]);
+
+  const selectedRegionLabel = REGION_OPTIONS.find((option) => option.key === selectedRegion)?.label ?? "全球總覽";
   const showFlightPanel = activeTab.startsWith("交通狀態/飛航");
   const showShippingPanel = activeTab.startsWith("交通狀態/海運");
 
@@ -41,7 +58,7 @@ export default function RightPanel({
       <aside className="w-14 z-20 mr-2 my-2 rounded-xl border border-white/10 bg-[#0a0e14]/90 backdrop-blur-xl flex flex-col items-center py-2 gap-2 pointer-events-auto">
         <button
           type="button"
-          onClick={onToggleCollapsed}
+          onClick={toggleRightPanelCollapsed}
           className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white"
           aria-label="展開右側資訊欄"
         >
@@ -56,12 +73,25 @@ export default function RightPanel({
     <aside className="w-[380px] z-10 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar ml-auto pointer-events-auto h-full relative">
       <button
         type="button"
-        onClick={onToggleCollapsed}
+        onClick={toggleRightPanelCollapsed}
         className="absolute right-4 top-4 z-20 w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white"
         aria-label="縮小右側資訊欄"
       >
         ▶
       </button>
+
+      <DashboardPanel title="全域同步狀態" tag="STORE">
+        <div className="space-y-2 text-[10px] text-gray-300">
+          <div className="flex justify-between">
+            <span>選中區域</span>
+            <span className="text-orange-300 font-semibold">{selectedRegionLabel}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>全球風險指數</span>
+            <span className="text-red-300 font-semibold">{globalRiskIndex}</span>
+          </div>
+        </div>
+      </DashboardPanel>
 
       {showFlightPanel && (
         <DashboardPanel title="飛航資訊" tag="AIR">
@@ -205,11 +235,7 @@ function DashboardPanel({ title, tag, children }: DashboardPanelProps) {
   );
 }
 
-type NewsCardProps = {
-  source: string;
-  title: string;
-  time: string;
-};
+type NewsCardProps = Pick<NewsItem, "source" | "title" | "time">;
 
 function NewsCard({ source, title, time }: NewsCardProps) {
   return (

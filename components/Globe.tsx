@@ -1,8 +1,10 @@
 "use client";
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useCallback } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
+import { useTerminalStore } from "./terminal/store";
+import type { RegionKey } from "./terminal/types";
 
 // 經緯度轉 3D 座標
 function latLonToVec3(lat: number, lon: number, r: number) {
@@ -33,10 +35,10 @@ const FLIGHT_ROUTES = [
 // 2. 獨立的資料集：衝突熱點 (Conflict Zones)
 // ----------------------------------------------------------------------
 const CONFLICT_ZONES = [
-  { name: "Ukraine", lat: 48.3, lon: 31.1, tier: 1 },
-  { name: "Gaza", lat: 31.5, lon: 34.4, tier: 1 },
-  { name: "Red Sea", lat: 15.5, lon: 41.8, tier: 2 },
-  { name: "Taiwan Strait", lat: 24.0, lon: 119.0, tier: 2 },
+  { name: "Ukraine", lat: 48.3, lon: 31.1, tier: 1, region: "europe" as RegionKey },
+  { name: "Gaza", lat: 31.5, lon: 34.4, tier: 1, region: "middle-east" as RegionKey },
+  { name: "Red Sea", lat: 15.5, lon: 41.8, tier: 2, region: "middle-east" as RegionKey },
+  { name: "Taiwan Strait", lat: 24.0, lon: 119.0, tier: 2, region: "asia-pacific" as RegionKey },
 ];
 
 const CONFLICT_DETAILS: Record<string, string> = {
@@ -88,14 +90,15 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   } | null>(null);
   const controls = useThree((state) => state.controls as unknown as { target: THREE.Vector3 } | undefined);
   const camera = useThree((state) => state.camera);
+  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
   const defaultCameraPosition = useMemo(() => new THREE.Vector3(0, 0, 6), []);
   const defaultCameraTarget = useMemo(() => new THREE.Vector3(0, 0, 0), []);
-  const resetToDefaultView = () => {
+  const resetToDefaultView = useCallback(() => {
     setSelectedConflict(null);
     camera.position.copy(defaultCameraPosition);
     if (controls) controls.target.copy(defaultCameraTarget);
     camera.lookAt(defaultCameraTarget);
-  };
+  }, [camera, controls, defaultCameraPosition, defaultCameraTarget]);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
@@ -157,6 +160,13 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
 
   const showFlight = transportMode === "default" || transportMode === "flight" || transportMode === "allTransport";
   const showShipping = transportMode === "shipping" || transportMode === "allTransport";
+  const activeSelectedConflict = useMemo(() => {
+    if (!selectedConflict) return null;
+    const zone = CONFLICT_ZONES.find((item) => item.name === selectedConflict.name);
+    if (!zone) return null;
+    if (selectedRegion !== "global" && zone.region !== selectedRegion) return null;
+    return selectedConflict;
+  }, [selectedConflict, selectedRegion]);
 
   // ----------------------------------------------------------------------
   // 動畫循環：控制地球自轉與飛機移動
@@ -184,10 +194,10 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       dot.position.copy(curve.getPoint(progress));
     });
 
-    if (selectedConflict) {
-      camera.position.lerp(selectedConflict.cameraPosition, 0.06);
-      if (controls) controls.target.lerp(selectedConflict.position, 0.08);
-      camera.lookAt(selectedConflict.position);
+    if (activeSelectedConflict) {
+      camera.position.lerp(activeSelectedConflict.cameraPosition, 0.06);
+      if (controls) controls.target.lerp(activeSelectedConflict.position, 0.08);
+      camera.lookAt(activeSelectedConflict.position);
     } else {
       camera.position.lerp(defaultCameraPosition, 0.04);
       if (controls) controls.target.lerp(defaultCameraTarget, 0.06);
@@ -336,6 +346,8 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       ========================================= */}
       <group name="ConflictLayer">
         {CONFLICT_ZONES.map((zone, i) => {
+          const isRegionVisible = selectedRegion === "global" || selectedRegion === zone.region;
+          if (!isRegionVisible) return null;
           const isCritical = zone.tier === 1;
           const color = isCritical ? "#f87171" : "#f5a524"; // 1級紅色，2級橘色
 
@@ -400,13 +412,13 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
         </Html>
       )}
 
-      {selectedConflict && (
-        <Html position={selectedConflict.position.clone().multiplyScalar(1.03)} center>
+      {activeSelectedConflict && (
+        <Html position={activeSelectedConflict.position.clone().multiplyScalar(1.03)} center>
           <div className="w-[240px] bg-[#050816]/96 border border-fuchsia-400/40 rounded-lg px-3 py-2.5 text-[10px] shadow-[0_0_24px_rgba(255,78,205,0.22)]">
-            <div className="text-fuchsia-300 font-bold tracking-wide">{selectedConflict.name}</div>
+            <div className="text-fuchsia-300 font-bold tracking-wide">{activeSelectedConflict.name}</div>
             <div className="text-[9px] text-cyan-200/70 mt-0.5">戰區焦點簡報</div>
             <div className="text-cyan-100/90 mt-1.5 leading-relaxed whitespace-normal break-words">
-              {selectedConflict.detail}
+              {activeSelectedConflict.detail}
             </div>
             <button
               type="button"

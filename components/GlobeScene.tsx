@@ -1,18 +1,17 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Globe from "./Globe";
+import { tabToTransportMode, useTerminalStore } from "./terminal/store";
 
-type GlobeSceneProps = {
-  transportMode: "default" | "flight" | "shipping" | "allTransport";
-};
+const GLOBE_SCENE_REV = "2026-04-24-r2";
 
-const GLOBE_SCENE_REV = "2026-04-24-r1";
-
-export default function GlobeScene({ transportMode }: GlobeSceneProps) {
+export default function GlobeScene() {
   const [isInteracting, setIsInteracting] = React.useState(false);
+  const activeTab = useTerminalStore((state) => state.activeTab);
+  const transportMode = tabToTransportMode(activeTab);
 
   React.useEffect(() => {
     const originalWarn = console.warn;
@@ -27,25 +26,21 @@ export default function GlobeScene({ transportMode }: GlobeSceneProps) {
   }, []);
 
   return (
-    // 關鍵修正：確保容器是絕對定位且撐滿，並設定 pointer-events-auto 以便操作地球
     <div className="w-full h-full relative z-0">
       <Canvas
         key={GLOBE_SCENE_REV}
         camera={{ position: [0, 0, 6], fov: 45 }}
-        // gl 設定優化
-        gl={{ 
-          antialias: true, 
-          alpha: true, // 必須開啟透明度
+        gl={{
+          antialias: true,
+          alpha: true,
           powerPreference: "high-performance",
           stencil: false,
-          depth: true
+          depth: true,
         }}
-        // 確保每幀渲染前正確清除背景，防止殘影或漆黑
         onCreated={({ gl }) => {
-          gl.setClearColor(0x000000, 0); // 設定清除顏色為黑色，但透明度為 0
+          gl.setClearColor(0x000000, 0);
         }}
       >
-        {/* 這裡是 3D 世界 */}
         <Globe transportMode={transportMode} autoRotate={!isInteracting} />
         <OrbitControls
           makeDefault

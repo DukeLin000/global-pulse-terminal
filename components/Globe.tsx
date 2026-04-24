@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useMemo, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -39,6 +39,13 @@ const CONFLICT_ZONES = [
   { name: "Taiwan Strait", lat: 24.0, lon: 119.0, tier: 2 },
 ];
 
+const CONFLICT_DETAILS: Record<string, string> = {
+  Ukraine: "東線砲擊密度升高，無人機偵察活動頻繁，補給線維持高壓運作。",
+  Gaza: "城市交戰持續，地面推進與空中監控同步進行，平民撤離通道受限。",
+  "Red Sea": "商船航道風險提升，護航編隊增加，保險費率持續上調。",
+  "Taiwan Strait": "高頻軍機與海上巡航活動增加，電子偵搜強度維持高檔。",
+};
+
 type FlightDotPath = {
   curve: THREE.QuadraticBezierCurve3;
   offset: number;
@@ -73,6 +80,14 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     detail: string;
     position: THREE.Vector3;
   } | null>(null);
+  const [selectedConflict, setSelectedConflict] = useState<{
+    name: string;
+    detail: string;
+    position: THREE.Vector3;
+    cameraPosition: THREE.Vector3;
+  } | null>(null);
+  const controls = useThree((state) => state.controls as unknown as { target: THREE.Vector3 } | undefined);
+  const camera = useThree((state) => state.camera);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
@@ -160,10 +175,21 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       const progress = (t * speed + offset) % 1;
       dot.position.copy(curve.getPoint(progress));
     });
+
+    if (selectedConflict) {
+      camera.position.lerp(selectedConflict.cameraPosition, 0.06);
+      if (controls) controls.target.lerp(selectedConflict.position, 0.08);
+      camera.lookAt(selectedConflict.position);
+    }
   });
 
   return (
-    <group ref={globeGroup}>
+    <group
+      ref={globeGroup}
+      onPointerMissed={() => {
+        setSelectedConflict(null);
+      }}
+    >
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
       
       {/* =========================================
@@ -313,6 +339,17 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
                 })
               }
               onPointerOut={() => setHoverInfo(null)}
+              onClick={(event) => {
+                event.stopPropagation();
+                const focus = latLonToVec3(zone.lat, zone.lon, 2.7);
+                const cameraPosition = focus.clone().normalize().multiplyScalar(4.1);
+                setSelectedConflict({
+                  name: zone.name,
+                  detail: CONFLICT_DETAILS[zone.name] ?? "目前戰區情報更新中。",
+                  position: focus,
+                  cameraPosition,
+                });
+              }}
             >
               {/* 核心光點 */}
               <mesh>
@@ -347,6 +384,22 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           <div className="bg-[#020617]/95 border border-cyan-400/40 rounded-md px-2 py-1.5 text-[10px] shadow-[0_0_20px_rgba(0,229,255,0.25)] min-w-[150px] pointer-events-none">
             <div className="text-cyan-300 font-bold">{hoverInfo.title}</div>
             <div className="text-fuchsia-200 mt-0.5">{hoverInfo.detail}</div>
+          </div>
+        </Html>
+      )}
+
+      {selectedConflict && (
+        <Html position={selectedConflict.position.clone().multiplyScalar(1.03)} center>
+          <div className="bg-[#050816]/95 border border-fuchsia-400/40 rounded-md px-3 py-2 text-[10px] shadow-[0_0_24px_rgba(255,78,205,0.22)] max-w-[220px]">
+            <div className="text-fuchsia-300 font-bold">{selectedConflict.name}</div>
+            <div className="text-cyan-100/90 mt-1 leading-relaxed">{selectedConflict.detail}</div>
+            <button
+              type="button"
+              onClick={() => setSelectedConflict(null)}
+              className="mt-2 text-[9px] px-2 py-1 rounded bg-white/10 text-gray-200 hover:bg-white/20"
+            >
+              關閉聚焦
+            </button>
           </div>
         </Html>
       )}

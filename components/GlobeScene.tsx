@@ -48,6 +48,7 @@ export default function GlobeScene({ transportMode }: GlobeSceneProps) {
         {/* 這裡是 3D 世界 */}
         <Globe transportMode={transportMode} autoRotate={!isInteracting} />
         <OrbitControls
+          makeDefault
           enablePan={false}
           enableZoom={false}
           minDistance={6}

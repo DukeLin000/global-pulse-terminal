@@ -88,6 +88,8 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   } | null>(null);
   const controls = useThree((state) => state.controls as unknown as { target: THREE.Vector3 } | undefined);
   const camera = useThree((state) => state.camera);
+  const defaultCameraPosition = useMemo(() => new THREE.Vector3(0, 0, 6), []);
+  const defaultCameraTarget = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
@@ -180,6 +182,10 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       camera.position.lerp(selectedConflict.cameraPosition, 0.06);
       if (controls) controls.target.lerp(selectedConflict.position, 0.08);
       camera.lookAt(selectedConflict.position);
+    } else {
+      camera.position.lerp(defaultCameraPosition, 0.04);
+      if (controls) controls.target.lerp(defaultCameraTarget, 0.06);
+      camera.lookAt(defaultCameraTarget);
     }
   });
 
@@ -390,13 +396,16 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
 
       {selectedConflict && (
         <Html position={selectedConflict.position.clone().multiplyScalar(1.03)} center>
-          <div className="bg-[#050816]/95 border border-fuchsia-400/40 rounded-md px-3 py-2 text-[10px] shadow-[0_0_24px_rgba(255,78,205,0.22)] max-w-[220px]">
-            <div className="text-fuchsia-300 font-bold">{selectedConflict.name}</div>
-            <div className="text-cyan-100/90 mt-1 leading-relaxed">{selectedConflict.detail}</div>
+          <div className="w-[240px] bg-[#050816]/96 border border-fuchsia-400/40 rounded-lg px-3 py-2.5 text-[10px] shadow-[0_0_24px_rgba(255,78,205,0.22)]">
+            <div className="text-fuchsia-300 font-bold tracking-wide">{selectedConflict.name}</div>
+            <div className="text-[9px] text-cyan-200/70 mt-0.5">戰區焦點簡報</div>
+            <div className="text-cyan-100/90 mt-1.5 leading-relaxed whitespace-normal break-words">
+              {selectedConflict.detail}
+            </div>
             <button
               type="button"
               onClick={() => setSelectedConflict(null)}
-              className="mt-2 text-[9px] px-2 py-1 rounded bg-white/10 text-gray-200 hover:bg-white/20"
+              className="mt-2 text-[9px] px-2 py-1 rounded bg-white/10 text-gray-200 hover:bg-white/20 w-full"
             >
               關閉聚焦
             </button>

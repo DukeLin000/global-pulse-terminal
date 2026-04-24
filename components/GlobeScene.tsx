@@ -2,9 +2,16 @@
 
 import React from 'react';
 import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import Globe from "./Globe";
 
-export default function GlobeScene() {
+type GlobeSceneProps = {
+  transportMode: "default" | "flight" | "shipping" | "allTransport";
+};
+
+export default function GlobeScene({ transportMode }: GlobeSceneProps) {
+  const [isInteracting, setIsInteracting] = React.useState(false);
+
   return (
     // 關鍵修正：確保容器是絕對定位且撐滿，並設定 pointer-events-auto 以便操作地球
     <div className="w-full h-full relative z-0">
@@ -24,8 +31,29 @@ export default function GlobeScene() {
         }}
       >
         {/* 這裡是 3D 世界 */}
-        <Globe />
+        <Globe transportMode={transportMode} autoRotate={!isInteracting} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          minDistance={6}
+          maxDistance={6}
+          rotateSpeed={0.7}
+          onStart={() => setIsInteracting(true)}
+          onEnd={() => setIsInteracting(false)}
+        />
       </Canvas>
+
+      <div className="absolute right-3 bottom-3 z-10 bg-black/55 border border-white/10 rounded-md px-2.5 py-2 text-[9px] text-gray-200 backdrop-blur pointer-events-none">
+        <div className="font-bold text-[10px] text-white mb-1">TRANSPORT LAYERS</div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-300" />
+          <span className={transportMode === "flight" ? "text-cyan-300" : ""}>航班分析</span>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="w-2 h-2 rotate-45 bg-amber-400 inline-block" />
+          <span className={transportMode === "shipping" ? "text-amber-300" : ""}>海運分析</span>
+        </div>
+      </div>
     </div>
   );
 }

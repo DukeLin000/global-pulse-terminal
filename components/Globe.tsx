@@ -1,7 +1,7 @@
 "use client";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
+import { Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
 // 經緯度轉 3D 座標
@@ -15,14 +15,18 @@ function latLonToVec3(lat: number, lon: number, r: number) {
   );
 }
 
+function latLonPathToPoints(path: Array<[number, number]>, radius: number) {
+  return path.map(([lat, lon]) => latLonToVec3(lat, lon, radius));
+}
+
 // ----------------------------------------------------------------------
 // 1. 獨立的資料集：飛行航班 (Flight Routes)
 // ----------------------------------------------------------------------
 const FLIGHT_ROUTES = [
-  { from: [25.0, 121.5], to: [40.7, -74.0] }, // Taipei -> New York
-  { from: [51.5, -0.1], to: [25.2, 55.3] },   // London -> Dubai
-  { from: [35.6, 139.6], to: [48.8, 2.3] },   // Tokyo -> Paris
-  { from: [37.7, -122.4], to: [22.3, 114.2] },// SF -> Hong Kong
+  { fromName: "Taipei", from: [25.0, 121.5], toName: "New York", to: [40.7, -74.0] },
+  { fromName: "London", from: [51.5, -0.1], toName: "Dubai", to: [25.2, 55.3] },
+  { fromName: "Tokyo", from: [35.6, 139.6], toName: "Paris", to: [48.8, 2.3] },
+  { fromName: "San Francisco", from: [37.7, -122.4], toName: "Hong Kong", to: [22.3, 114.2] },
 ];
 
 // ----------------------------------------------------------------------
@@ -35,18 +39,71 @@ const CONFLICT_ZONES = [
   { name: "Taiwan Strait", lat: 24.0, lon: 119.0, tier: 2 },
 ];
 
-export default function Globe() {
+type FlightDotPath = {
+  curve: THREE.QuadraticBezierCurve3;
+  offset: number;
+  speed: number;
+  label: string;
+  infoType: "航班分析" | "海運分析";
+  mid: THREE.Vector3;
+};
+
+type GlobeProps = {
+  transportMode: "default" | "flight" | "shipping" | "allTransport";
+  autoRotate: boolean;
+};
+
+const SHIPPING_ROUTES = [
+  { fromName: "Shanghai", from: [31.2, 121.5], toName: "Singapore", to: [1.3, 103.8] },
+  { fromName: "Tokyo", from: [35.4, 139.7], toName: "Los Angeles", to: [34.0, -118.2] },
+  { fromName: "Rotterdam", from: [51.9, 4.5], toName: "New York", to: [40.7, -74.0] },
+  { fromName: "Hong Kong", from: [22.3, 114.2], toName: "Miami", to: [25.8, -80.2] },
+];
+
+// 粗略的大陸輪廓（用於建立類似終端地圖邊界視覺）
+const CONTINENT_OUTLINES: Array<Array<[number, number]>> = [
+  // 北美洲
+  [
+    [72, -165], [65, -140], [58, -120], [52, -108], [45, -97], [31, -82], [20, -99],
+    [18, -110], [28, -118], [40, -125], [55, -140], [62, -155], [72, -165],
+  ],
+  // 南美洲
+  [
+    [12, -81], [8, -70], [0, -66], [-10, -60], [-22, -56], [-35, -60], [-50, -70],
+    [-55, -74], [-45, -66], [-28, -56], [-12, -50], [0, -54], [8, -63], [12, -81],
+  ],
+  // 歐亞非（簡化）
+  [
+    [70, -10], [62, 15], [58, 35], [55, 60], [60, 90], [55, 120], [45, 140], [30, 130],
+    [20, 110], [10, 100], [20, 80], [30, 65], [35, 45], [33, 25], [30, 10], [25, 0],
+    [15, -5], [5, 5], [-5, 20], [-20, 25], [-35, 20], [-35, 10], [-20, 5], [-5, 0],
+    [10, -10], [25, -15], [40, -5], [50, 5], [60, 0], [70, -10],
+  ],
+  // 澳洲
+  [
+    [-11, 113], [-20, 122], [-30, 138], [-36, 146], [-40, 153], [-28, 153], [-18, 145],
+    [-13, 130], [-11, 113],
+  ],
+];
+
+export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
-  const flightDotsRef = useRef<THREE.Mesh[]>([]);
+  const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
+  const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
+  const [hoverInfo, setHoverInfo] = useState<{
+    title: string;
+    detail: string;
+    position: THREE.Vector3;
+  } | null>(null);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
   // ----------------------------------------------------------------------
   const { lines, dots } = useMemo(() => {
     const linesArr: THREE.BufferGeometry[] = [];
-    const dotsArr: any[] = [];
+    const dotsArr: FlightDotPath[] = [];
 
-    FLIGHT_ROUTES.forEach((route) => {
+    FLIGHT_ROUTES.forEach((route, index) => {
       const start = latLonToVec3(route.from[0], route.from[1], 2.5);
       const end = latLonToVec3(route.to[0], route.to[1], 2.5);
       
@@ -55,24 +112,75 @@ export default function Globe() {
       const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
       
       linesArr.push(new THREE.BufferGeometry().setFromPoints(curve.getPoints(50)));
-      // 給予每台飛機隨機的速度與初始位置偏移
-      dotsArr.push({ curve, offset: Math.random(), speed: 0.05 + Math.random() * 0.05 });
+      // 以固定序號產生可重現的偏移與速度，避免渲染階段使用非純函式
+      const offset = (index * 0.237) % 1;
+      const speed = 0.05 + ((index * 0.113) % 0.05);
+      dotsArr.push({
+        curve,
+        offset,
+        speed,
+        infoType: "航班分析",
+        label: `${route.fromName} → ${route.toName}`,
+        mid: curve.getPoint(0.5),
+      });
     });
 
     return { lines: linesArr, dots: dotsArr };
   }, []);
+
+  const { shippingLines, shippingDots } = useMemo(() => {
+    const linesArr: THREE.BufferGeometry[] = [];
+    const dotsArr: FlightDotPath[] = [];
+
+    SHIPPING_ROUTES.forEach((route, index) => {
+      const start = latLonToVec3(route.from[0], route.from[1], 2.5);
+      const end = latLonToVec3(route.to[0], route.to[1], 2.5);
+      const mid = start.clone().add(end).divideScalar(2).normalize().multiplyScalar(2.9);
+      const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+
+      linesArr.push(new THREE.BufferGeometry().setFromPoints(curve.getPoints(50)));
+      const offset = (index * 0.193) % 1;
+      const speed = 0.02 + ((index * 0.071) % 0.03);
+      dotsArr.push({
+        curve,
+        offset,
+        speed,
+        infoType: "海運分析",
+        label: `${route.fromName} → ${route.toName}`,
+        mid: curve.getPoint(0.5),
+      });
+    });
+
+    return { shippingLines: linesArr, shippingDots: dotsArr };
+  }, []);
+
+  const continentLines = useMemo(() => {
+    return CONTINENT_OUTLINES.map((path) =>
+      new THREE.BufferGeometry().setFromPoints(latLonPathToPoints(path, 2.515))
+    );
+  }, []);
+
+  const showFlight = transportMode === "default" || transportMode === "flight" || transportMode === "allTransport";
+  const showShipping = transportMode === "shipping" || transportMode === "allTransport";
 
   // ----------------------------------------------------------------------
   // 動畫循環：控制地球自轉與飛機移動
   // ----------------------------------------------------------------------
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    if (globeGroup.current) globeGroup.current.rotation.y += 0.001;
+    if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;
       const { curve, offset, speed } = dots[i];
       // 取小數部分實現無限循環 (0 -> 1 -> 0)
+      const progress = (t * speed + offset) % 1;
+      dot.position.copy(curve.getPoint(progress));
+    });
+
+    shippingDotsRef.current.forEach((dot, i) => {
+      if (!dot) return;
+      const { curve, offset, speed } = shippingDots[i];
       const progress = (t * speed + offset) % 1;
       dot.position.copy(curve.getPoint(progress));
     });
@@ -95,7 +203,7 @@ export default function Globe() {
 
       <mesh>
         <sphereGeometry args={[2.505, 32, 16]} />
-        <meshBasicMaterial color="#3060a0" wireframe transparent opacity={0.15} />
+        <meshBasicMaterial color="#f59e0b" wireframe transparent opacity={0.3} />
       </mesh>
 
       <mesh scale={1.1}>
@@ -109,24 +217,99 @@ export default function Globe() {
         />
       </mesh>
 
+      <group name="MapOutlineLayer">
+        {continentLines.map((geo, i) => (
+          <line key={`continent-line-${i}`}>
+            <primitive object={geo} attach="geometry" />
+            <lineBasicMaterial color="#f59e0b" transparent opacity={0.75} />
+          </line>
+        ))}
+      </group>
+
       {/* =========================================
           圖層一：飛行航班 (藍色軌跡與亮點)
       ========================================= */}
-      <group name="FlightLayer">
-        {lines.map((geo, i) => (
-          <line key={`flight-line-${i}`}>
-            <primitive object={geo} attach="geometry" />
-            <lineBasicMaterial color="#64b4ff" transparent opacity={0.2} />
-          </line>
-        ))}
+      {showFlight && (
+        <group name="FlightLayer">
+          {lines.map((geo, i) => (
+            <line key={`flight-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#67e8f9" transparent opacity={0.35} />
+            </line>
+          ))}
 
-        {dots.map((_, i) => (
-          <mesh key={`flight-dot-${i}`} ref={(el) => (flightDotsRef.current[i] = el!)}>
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshBasicMaterial color="#88e0ff" />
-          </mesh>
-        ))}
-      </group>
+          {dots.map((_, i) => (
+            <mesh
+              key={`flight-dot-${i}`}
+              ref={(el) => {
+                flightDotsRef.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#67e8f9" />
+            </mesh>
+          ))}
+
+          {dots.map((item, i) => (
+            <mesh
+              key={`flight-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <sphereGeometry args={[0.05, 10, 10]} />
+              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.45} />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {showShipping && (
+        <group name="ShippingLayer">
+          {shippingLines.map((geo, i) => (
+            <line key={`shipping-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#f59e0b" transparent opacity={0.45} />
+            </line>
+          ))}
+
+          {shippingDots.map((_, i) => (
+            <mesh
+              key={`shipping-dot-${i}`}
+              ref={(el) => {
+                shippingDotsRef.current[i] = el;
+              }}
+            >
+              <boxGeometry args={[0.03, 0.03, 0.03]} />
+              <meshBasicMaterial color="#fbbf24" />
+            </mesh>
+          ))}
+
+          {shippingDots.map((item, i) => (
+            <mesh
+              key={`shipping-marker-${i}`}
+              position={item.mid}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: item.infoType,
+                  detail: item.label,
+                  position: item.mid.clone().multiplyScalar(1.03),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
+              <octahedronGeometry args={[0.06, 0]} />
+              <meshBasicMaterial color="#f59e0b" transparent opacity={0.45} />
+            </mesh>
+          ))}
+        </group>
+      )}
 
       {/* =========================================
           圖層二：衝突熱點 (紅色發光警示標記)
@@ -137,7 +320,18 @@ export default function Globe() {
           const color = isCritical ? "#f87171" : "#f5a524"; // 1級紅色，2級橘色
 
           return (
-            <group key={`conflict-${i}`} position={latLonToVec3(zone.lat, zone.lon, 2.51)}>
+            <group
+              key={`conflict-${i}`}
+              position={latLonToVec3(zone.lat, zone.lon, 2.51)}
+              onPointerOver={() =>
+                setHoverInfo({
+                  title: "戰爭衝突資訊",
+                  detail: zone.name,
+                  position: latLonToVec3(zone.lat, zone.lon, 2.7),
+                })
+              }
+              onPointerOut={() => setHoverInfo(null)}
+            >
               {/* 核心光點 */}
               <mesh>
                 <sphereGeometry args={[0.03, 16, 16]} />
@@ -163,6 +357,15 @@ export default function Globe() {
       ========================================= */}
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 3, 5]} intensity={1} />
+
+      {hoverInfo && (
+        <Html position={hoverInfo.position} center>
+          <div className="bg-[#05070a]/95 border border-orange-500/40 rounded-md px-2 py-1.5 text-[10px] shadow-xl min-w-[150px] pointer-events-none">
+            <div className="text-orange-400 font-bold">{hoverInfo.title}</div>
+            <div className="text-gray-200 mt-0.5">{hoverInfo.detail}</div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

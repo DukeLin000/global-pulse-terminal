@@ -10,6 +10,7 @@ import SystemFooter from "@/components/terminal/SystemFooter";
 import AlertToasts from "@/components/terminal/AlertToasts";
 import { useTerminalStore } from "@/components/terminal/store";
 import { useShallow } from "zustand/react/shallow";
+import ApiDebugPanel from "@/src/components/ApiDebugPanel";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
 
@@ -156,6 +157,7 @@ export default function Terminal() {
             <GlobeScene />
           </div>
           <AlertToasts />
+          <ApiDebugPanel />
 
           {selectedLiveNewsSource && isLivePopupOpen && (
             <LiveNewsPopup source={selectedLiveNewsSource} onClose={closeLivePopup} />

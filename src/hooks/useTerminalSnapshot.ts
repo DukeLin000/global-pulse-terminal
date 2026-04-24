@@ -13,47 +13,58 @@ type UseTerminalSnapshotOptions = {
 export function useTerminalSnapshot(options?: UseTerminalSnapshotOptions) {
   const { region, intervalMs = 4000, enabled = true } = options ?? {};
   const [data, setData] = useState<TerminalSnapshot | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const inFlightRef = useRef(false);
+  const unmountedRef = useRef(false);
 
-  const refresh = useCallback(async () => {
+  const refetch = useCallback(async () => {
     if (!enabled || inFlightRef.current) return;
     inFlightRef.current = true;
-    setIsLoading((prev) => prev || !data);
-    setError(null);
+    if (!unmountedRef.current) {
+      setIsLoading(true);
+      setError(null);
+    }
 
     try {
       const snapshot = await getTerminalSnapshot(region);
-      setData(snapshot);
+      if (!unmountedRef.current) {
+        setData(snapshot);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Snapshot fetch failed");
+      if (!unmountedRef.current) {
+        setError(err instanceof Error ? err.message : "Snapshot fetch failed");
+      }
     } finally {
       inFlightRef.current = false;
-      setIsLoading(false);
+      if (!unmountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, [data, enabled, region]);
+  }, [enabled, region]);
 
   useEffect(() => {
+    unmountedRef.current = false;
     if (!enabled) return;
     const initialTimer = window.setTimeout(() => {
-      void refresh();
+      void refetch();
     }, 0);
     const timer = window.setInterval(() => {
       if (document.hidden) return;
-      void refresh();
+      void refetch();
     }, Math.max(intervalMs, 2500));
 
     return () => {
+      unmountedRef.current = true;
       window.clearTimeout(initialTimer);
       window.clearInterval(timer);
     };
-  }, [enabled, intervalMs, refresh]);
+  }, [enabled, intervalMs, refetch]);
 
   return {
     data,
     isLoading,
     error,
-    refresh,
+    refetch,
   };
 }

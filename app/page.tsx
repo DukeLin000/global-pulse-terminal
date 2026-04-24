@@ -188,7 +188,18 @@ export default function Terminal() {
 
 // --- 重構的側邊欄 UI 子組件 ---
 
-function NavItem({ icon, label, sub, active, onClick }: any) {
+type BaseClickableProps = {
+  icon?: string;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+};
+
+type NavItemProps = BaseClickableProps & {
+  sub?: string;
+};
+
+function NavItem({ icon, label, sub, active = false, onClick }: NavItemProps) {
   return (
     <div onClick={onClick} className={`flex items-center gap-4 px-3 py-2.5 rounded-md cursor-pointer transition-all ${active ? 'bg-orange-500/10 text-orange-500 border-l-2 border-orange-500 shadow-[inset_10px_0_15px_-10px_rgba(245,165,36,0.3)]' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
       <span className="text-lg w-5 flex justify-center opacity-80">{icon}</span>
@@ -200,7 +211,25 @@ function NavItem({ icon, label, sub, active, onClick }: any) {
   );
 }
 
-function CollapsibleMenu({ icon, label, sub, isOpen, onToggle, children, active }: any) {
+type CollapsibleMenuProps = {
+  icon: string;
+  label: string;
+  sub?: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  active?: boolean;
+};
+
+function CollapsibleMenu({
+  icon,
+  label,
+  sub,
+  isOpen,
+  onToggle,
+  children,
+  active = false,
+}: CollapsibleMenuProps) {
   return (
     <div className="space-y-1">
       <div onClick={onToggle} className={`flex items-center gap-4 px-3 py-2.5 rounded-md cursor-pointer transition-all ${active ? 'text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
@@ -220,7 +249,7 @@ function CollapsibleMenu({ icon, label, sub, isOpen, onToggle, children, active 
   );
 }
 
-function SubNavItem({ icon, label, active, onClick }: any) {
+function SubNavItem({ icon, label, active = false, onClick }: NavItemProps) {
   return (
     <div onClick={onClick} className={`flex items-center gap-3 px-3 py-2 cursor-pointer text-[10px] transition-colors rounded-md ${active ? 'text-orange-400 font-bold bg-orange-400/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
       {icon && <span className="opacity-60 text-sm w-4 flex justify-center">{icon}</span>}
@@ -231,7 +260,13 @@ function SubNavItem({ icon, label, active, onClick }: any) {
 
 // --- 右側面板 UI 子組件 ---
 
-function TopTicker({ label, val, up, down }: any) {
+type TopTickerProps = {
+  label: string;
+  val: string;
+  up: boolean;
+};
+
+function TopTicker({ label, val, up }: TopTickerProps) {
   return (
     <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10 shrink-0">
       <span className="text-gray-500 font-bold">{label}</span>
@@ -241,7 +276,13 @@ function TopTicker({ label, val, up, down }: any) {
   );
 }
 
-function DashboardPanel({ title, tag, children }: any) {
+type DashboardPanelProps = {
+  title: string;
+  tag?: string;
+  children: React.ReactNode;
+};
+
+function DashboardPanel({ title, tag, children }: DashboardPanelProps) {
   return (
     <div className="bg-[#0a0e14]/85 border border-white/10 rounded-xl backdrop-blur-xl flex flex-col shadow-2xl overflow-hidden shrink-0">
       <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
@@ -254,7 +295,13 @@ function DashboardPanel({ title, tag, children }: any) {
   );
 }
 
-function NewsCard({ source, title, time }: any) {
+type NewsCardProps = {
+  source: string;
+  title: string;
+  time: string;
+};
+
+function NewsCard({ source, title, time }: NewsCardProps) {
   return (
     <div className="bg-white/5 border border-white/5 p-3 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
       <div className="flex justify-between items-center mb-1"><span className="text-[8px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded font-bold uppercase">{source}</span><span className="text-[8px] text-gray-600 italic">{time}</span></div>

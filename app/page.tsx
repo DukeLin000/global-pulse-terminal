@@ -9,6 +9,7 @@ import LiveNewsPopup from "@/components/terminal/LiveNewsPopup";
 import SystemFooter from "@/components/terminal/SystemFooter";
 import AlertToasts from "@/components/terminal/AlertToasts";
 import { useTerminalStore } from "@/components/terminal/store";
+import { useShallow } from "zustand/react/shallow";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
 
@@ -55,20 +56,39 @@ const CONFLICT_ITEMS: ConflictItem[] = [
 export default function Terminal() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const activeTab = useTerminalStore((state) => state.activeTab);
-  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
-  const conflictItems = useTerminalStore((state) => state.conflictItems);
-  const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
-  const isLivePopupOpen = useTerminalStore((state) => state.isLivePopupOpen);
-  const closeLivePopup = useTerminalStore((state) => state.closeLivePopup);
-  const setGlobalRiskIndex = useTerminalStore((state) => state.setGlobalRiskIndex);
-  const startPolling = useTerminalStore((state) => state.startPolling);
-  const stopPolling = useTerminalStore((state) => state.stopPolling);
-  const isLeftPanelOpen = useTerminalStore((state) => state.isLeftPanelOpen);
-  const toggleLeftPanel = useTerminalStore((state) => state.toggleLeftPanel);
-  const closeLeftPanel = useTerminalStore((state) => state.closeLeftPanel);
-  const isRightPanelOpen = useTerminalStore((state) => state.isRightPanelOpen);
-  const toggleRightPanel = useTerminalStore((state) => state.toggleRightPanel);
+  const {
+    activeTab,
+    selectedRegion,
+    conflictItems,
+    liveNewsSources,
+    isLivePopupOpen,
+    closeLivePopup,
+    setGlobalRiskIndex,
+    startPolling,
+    stopPolling,
+    isLeftPanelOpen,
+    toggleLeftPanel,
+    closeLeftPanel,
+    isRightPanelOpen,
+    toggleRightPanel,
+  } = useTerminalStore(
+    useShallow((state) => ({
+      activeTab: state.activeTab,
+      selectedRegion: state.selectedRegion,
+      conflictItems: state.conflictItems,
+      liveNewsSources: state.liveNewsSources,
+      isLivePopupOpen: state.isLivePopupOpen,
+      closeLivePopup: state.closeLivePopup,
+      setGlobalRiskIndex: state.setGlobalRiskIndex,
+      startPolling: state.startPolling,
+      stopPolling: state.stopPolling,
+      isLeftPanelOpen: state.isLeftPanelOpen,
+      toggleLeftPanel: state.toggleLeftPanel,
+      closeLeftPanel: state.closeLeftPanel,
+      isRightPanelOpen: state.isRightPanelOpen,
+      toggleRightPanel: state.toggleRightPanel,
+    }))
+  );
 
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => {

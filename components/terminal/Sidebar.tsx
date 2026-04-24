@@ -3,18 +3,34 @@
 import type { ReactNode } from "react";
 import { REGION_OPTIONS } from "./data";
 import { useTerminalStore } from "./store";
+import { useShallow } from "zustand/react/shallow";
 
 export default function Sidebar() {
-  const activeTab = useTerminalStore((state) => state.activeTab);
-  const expanded = useTerminalStore((state) => state.expandedMenus);
-  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
-  const setActiveTab = useTerminalStore((state) => state.setActiveTab);
-  const toggleMenu = useTerminalStore((state) => state.toggleMenu);
-  const setSelectedRegion = useTerminalStore((state) => state.setSelectedRegion);
-  const openLivePopup = useTerminalStore((state) => state.openLivePopup);
-  const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
-  const isLeftPanelOpen = useTerminalStore((state) => state.isLeftPanelOpen);
-  const closeLeftPanel = useTerminalStore((state) => state.closeLeftPanel);
+  const {
+    activeTab,
+    expandedMenus: expanded,
+    selectedRegion,
+    setActiveTab,
+    toggleMenu,
+    setSelectedRegion,
+    openLivePopup,
+    liveNewsSources,
+    isLeftPanelOpen,
+    closeLeftPanel,
+  } = useTerminalStore(
+    useShallow((state) => ({
+      activeTab: state.activeTab,
+      expandedMenus: state.expandedMenus,
+      selectedRegion: state.selectedRegion,
+      setActiveTab: state.setActiveTab,
+      toggleMenu: state.toggleMenu,
+      setSelectedRegion: state.setSelectedRegion,
+      openLivePopup: state.openLivePopup,
+      liveNewsSources: state.liveNewsSources,
+      isLeftPanelOpen: state.isLeftPanelOpen,
+      closeLeftPanel: state.closeLeftPanel,
+    }))
+  );
 
   return (
     <nav

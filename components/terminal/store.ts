@@ -128,10 +128,12 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   },
   startPolling: (intervalMs = 5000) => {
     if (pollTimer) return;
+    const safeInterval = Math.max(intervalMs, 2500);
     void get().refreshTerminalData();
     pollTimer = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       void get().refreshTerminalData();
-    }, intervalMs);
+    }, safeInterval);
   },
   stopPolling: () => {
     if (!pollTimer) return;

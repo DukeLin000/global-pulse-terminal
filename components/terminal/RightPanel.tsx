@@ -5,6 +5,7 @@ import { REGION_OPTIONS } from "./data";
 import type { NewsItem, RegionKey } from "./types";
 import { useTerminalStore } from "./store";
 import { EconomicAdvancedChart, RiskTrendAdvancedChart } from "./AdvancedCharts";
+import { useShallow } from "zustand/react/shallow";
 
 const FLIGHT_INFO = [
   "Taipei → New York（長程國際線）",
@@ -23,18 +24,35 @@ function isInSelectedRegion(region: RegionKey, targetRegions: RegionKey[]) {
 }
 
 export default function RightPanel() {
-  const activeTab = useTerminalStore((state) => state.activeTab);
-  const searchTerm = useTerminalStore((state) => state.searchTerm);
-  const selectedRegion = useTerminalStore((state) => state.selectedRegion);
-  const globalRiskIndex = useTerminalStore((state) => state.globalRiskIndex);
-  const newsItems = useTerminalStore((state) => state.newsItems);
-  const conflictItems = useTerminalStore((state) => state.conflictItems);
-  const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
-  const isDataLoading = useTerminalStore((state) => state.isDataLoading);
-  const dataError = useTerminalStore((state) => state.dataError);
-  const isRightPanelOpen = useTerminalStore((state) => state.isRightPanelOpen);
-  const toggleRightPanel = useTerminalStore((state) => state.toggleRightPanel);
-  const setFocusCoordinates = useTerminalStore((state) => state.setFocusCoordinates);
+  const {
+    activeTab,
+    searchTerm,
+    selectedRegion,
+    globalRiskIndex,
+    newsItems,
+    conflictItems,
+    liveNewsSources,
+    isDataLoading,
+    dataError,
+    isRightPanelOpen,
+    toggleRightPanel,
+    setFocusCoordinates,
+  } = useTerminalStore(
+    useShallow((state) => ({
+      activeTab: state.activeTab,
+      searchTerm: state.searchTerm,
+      selectedRegion: state.selectedRegion,
+      globalRiskIndex: state.globalRiskIndex,
+      newsItems: state.newsItems,
+      conflictItems: state.conflictItems,
+      liveNewsSources: state.liveNewsSources,
+      isDataLoading: state.isDataLoading,
+      dataError: state.dataError,
+      isRightPanelOpen: state.isRightPanelOpen,
+      toggleRightPanel: state.toggleRightPanel,
+      setFocusCoordinates: state.setFocusCoordinates,
+    }))
+  );
 
   const selectedLiveNewsSource = useMemo(
     () => liveNewsSources.find((source) => activeTab === `新聞直播/${source.label}`),

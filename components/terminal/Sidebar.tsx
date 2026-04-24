@@ -91,6 +91,21 @@ export default function Sidebar({
         </CollapsibleMenu>
 
         <CollapsibleMenu
+          icon="🚦"
+          label="交通狀態"
+          sub="全球運輸監控"
+          isOpen={expanded.includes("交通狀態")}
+          onToggle={() => onToggleMenu("交通狀態")}
+          active={activeTab.startsWith("交通狀態/")}
+        >
+          <div className="text-[10px] text-gray-500 px-3 py-1.5 font-bold">航空與海運</div>
+          <SubNavItem icon="✈️" label="飛航資訊" active={activeTab === "交通狀態/飛航資訊"} onClick={() => onSetActiveTab("交通狀態/飛航資訊")} />
+          <SubNavItem icon="🧭" label="航班分析" active={activeTab === "交通狀態/航班分析"} onClick={() => onSetActiveTab("交通狀態/航班分析")} />
+          <SubNavItem icon="🚢" label="海運資訊" active={activeTab === "交通狀態/海運資訊"} onClick={() => onSetActiveTab("交通狀態/海運資訊")} />
+          <SubNavItem icon="📦" label="海運分析" active={activeTab === "交通狀態/海運分析"} onClick={() => onSetActiveTab("交通狀態/海運分析")} />
+        </CollapsibleMenu>
+
+        <CollapsibleMenu
           icon="📄"
           label="報告中心"
           sub="情勢分析報告"

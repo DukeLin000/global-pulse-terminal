@@ -41,9 +41,21 @@ type FlightDotPath = {
   speed: number;
 };
 
-export default function Globe() {
+type GlobeProps = {
+  transportMode: "default" | "flight" | "shipping" | "allTransport";
+};
+
+const SHIPPING_ROUTES = [
+  { from: [31.2, 121.5], to: [1.3, 103.8] },   // Shanghai -> Singapore
+  { from: [35.4, 139.7], to: [34.0, -118.2] }, // Tokyo -> Los Angeles
+  { from: [51.9, 4.5], to: [40.7, -74.0] },    // Rotterdam -> New York
+  { from: [22.3, 114.2], to: [25.8, -80.2] },  // Hong Kong -> Miami
+];
+
+export default function Globe({ transportMode }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
+  const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
 
   // ----------------------------------------------------------------------
   // 計算邏輯：生成航線幾何體與動態點軌跡
@@ -70,6 +82,28 @@ export default function Globe() {
     return { lines: linesArr, dots: dotsArr };
   }, []);
 
+  const { shippingLines, shippingDots } = useMemo(() => {
+    const linesArr: THREE.BufferGeometry[] = [];
+    const dotsArr: FlightDotPath[] = [];
+
+    SHIPPING_ROUTES.forEach((route, index) => {
+      const start = latLonToVec3(route.from[0], route.from[1], 2.5);
+      const end = latLonToVec3(route.to[0], route.to[1], 2.5);
+      const mid = start.clone().add(end).divideScalar(2).normalize().multiplyScalar(2.9);
+      const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+
+      linesArr.push(new THREE.BufferGeometry().setFromPoints(curve.getPoints(50)));
+      const offset = (index * 0.193) % 1;
+      const speed = 0.02 + ((index * 0.071) % 0.03);
+      dotsArr.push({ curve, offset, speed });
+    });
+
+    return { shippingLines: linesArr, shippingDots: dotsArr };
+  }, []);
+
+  const showFlight = transportMode === "default" || transportMode === "flight" || transportMode === "allTransport";
+  const showShipping = transportMode === "shipping" || transportMode === "allTransport";
+
   // ----------------------------------------------------------------------
   // 動畫循環：控制地球自轉與飛機移動
   // ----------------------------------------------------------------------
@@ -81,6 +115,13 @@ export default function Globe() {
       if (!dot) return;
       const { curve, offset, speed } = dots[i];
       // 取小數部分實現無限循環 (0 -> 1 -> 0)
+      const progress = (t * speed + offset) % 1;
+      dot.position.copy(curve.getPoint(progress));
+    });
+
+    shippingDotsRef.current.forEach((dot, i) => {
+      if (!dot) return;
+      const { curve, offset, speed } = shippingDots[i];
       const progress = (t * speed + offset) % 1;
       dot.position.copy(curve.getPoint(progress));
     });
@@ -120,26 +161,51 @@ export default function Globe() {
       {/* =========================================
           圖層一：飛行航班 (藍色軌跡與亮點)
       ========================================= */}
-      <group name="FlightLayer">
-        {lines.map((geo, i) => (
-          <line key={`flight-line-${i}`}>
-            <primitive object={geo} attach="geometry" />
-            <lineBasicMaterial color="#64b4ff" transparent opacity={0.2} />
-          </line>
-        ))}
+      {showFlight && (
+        <group name="FlightLayer">
+          {lines.map((geo, i) => (
+            <line key={`flight-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#64b4ff" transparent opacity={0.25} />
+            </line>
+          ))}
 
-        {dots.map((_, i) => (
-          <mesh
-            key={`flight-dot-${i}`}
-            ref={(el) => {
-              flightDotsRef.current[i] = el;
-            }}
-          >
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshBasicMaterial color="#88e0ff" />
-          </mesh>
-        ))}
-      </group>
+          {dots.map((_, i) => (
+            <mesh
+              key={`flight-dot-${i}`}
+              ref={(el) => {
+                flightDotsRef.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#88e0ff" />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {showShipping && (
+        <group name="ShippingLayer">
+          {shippingLines.map((geo, i) => (
+            <line key={`shipping-line-${i}`}>
+              <primitive object={geo} attach="geometry" />
+              <lineBasicMaterial color="#34d399" transparent opacity={0.3} />
+            </line>
+          ))}
+
+          {shippingDots.map((_, i) => (
+            <mesh
+              key={`shipping-dot-${i}`}
+              ref={(el) => {
+                shippingDotsRef.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[0.028, 8, 8]} />
+              <meshBasicMaterial color="#6ee7b7" />
+            </mesh>
+          ))}
+        </group>
+      )}
 
       {/* =========================================
           圖層二：衝突熱點 (紅色發光警示標記)

@@ -57,7 +57,7 @@ const CONFLICT_ITEMS: ConflictItem[] = [
 
 export default function Terminal() {
   const [activeTab, setActiveTab] = useState("地緣政治報告");
-  const [expanded, setExpanded] = useState<string[]>(["即時新聞", "投資中心", "報告中心"]);
+  const [expanded, setExpanded] = useState<string[]>(["即時新聞", "交通狀態", "投資中心", "報告中心"]);
   const [timeStr, setTimeStr] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLivePopupOpen, setIsLivePopupOpen] = useState(false);
@@ -109,6 +109,13 @@ export default function Terminal() {
     setIsLivePopupOpen(true);
   };
 
+  const globeTransportMode = useMemo(() => {
+    if (activeTab.startsWith("交通狀態/飛航")) return "flight";
+    if (activeTab.startsWith("交通狀態/海運")) return "shipping";
+    if (activeTab.startsWith("交通狀態/")) return "allTransport";
+    return "default";
+  }, [activeTab]);
+
   return (
     <main className="h-screen w-full bg-[#020408] text-[#e2e8f0] font-sans text-[11px] flex overflow-hidden">
       <Sidebar
@@ -130,7 +137,7 @@ export default function Terminal() {
 
         <div className="flex-1 relative overflow-hidden flex">
           <div className="absolute inset-0 z-0">
-            <GlobeScene />
+            <GlobeScene transportMode={globeTransportMode} />
           </div>
 
           {selectedLiveNewsSource && isLivePopupOpen && (

@@ -1,4 +1,5 @@
 import type {
+  AlertLevel,
   AlertAckRequest,
   AlertAckResponse,
   AlertItem,
@@ -10,6 +11,25 @@ import type {
 } from "@/src/types/terminal";
 
 type QueryValue = string | number | boolean | undefined | null;
+type RouteMode = "flight" | "shipping" | "all";
+
+export type NewsQueryParams = {
+  region?: string;
+  q?: string;
+  limit?: number;
+  cursor?: string;
+};
+
+export type ConflictQueryParams = {
+  region?: string;
+  minScore?: number;
+  sort?: "score" | "updatedAt";
+};
+
+export type AlertQueryParams = {
+  level?: AlertLevel;
+  limit?: number;
+};
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_TERMINAL_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8080";
@@ -42,46 +62,37 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function getTerminalSnapshot(region?: string) {
+export function getTerminalSnapshot(region?: string): Promise<TerminalSnapshot> {
   return request<TerminalSnapshot>(`/api/v1/terminal/snapshot${toQuery({ region })}`);
 }
 
-export function getNews(params?: {
-  region?: string;
-  q?: string;
-  limit?: number;
-  cursor?: string;
-}) {
+export function getNews(params?: NewsQueryParams): Promise<NewsItem[]> {
   return request<NewsItem[]>(`/api/v1/news${toQuery(params)}`);
 }
 
-export function getConflicts(params?: {
-  region?: string;
-  minScore?: number;
-  sort?: "score" | "updatedAt";
-}) {
+export function getConflicts(params?: ConflictQueryParams): Promise<ConflictItem[]> {
   return request<ConflictItem[]>(`/api/v1/conflicts${toQuery(params)}`);
 }
 
-export function getGlobeRoutes(mode?: "flight" | "shipping" | "all") {
+export function getGlobeRoutes(mode?: RouteMode): Promise<RouteLayers> {
   return request<RouteLayers>(`/api/v1/globe/routes${toQuery({ mode })}`);
 }
 
-export function getConflictZones(region?: string) {
+export function getConflictZones(region?: string): Promise<ConflictZone[]> {
   return request<ConflictZone[]>(`/api/v1/globe/conflict-zones${toQuery({ region })}`);
 }
 
-export function getAlerts(params?: { level?: string; limit?: number }) {
+export function getAlerts(params?: AlertQueryParams): Promise<AlertItem[]> {
   return request<AlertItem[]>(`/api/v1/alerts${toQuery(params)}`);
 }
 
-export function ackAlert(payload: AlertAckRequest) {
+export function ackAlert(payload: AlertAckRequest): Promise<AlertAckResponse> {
   return request<AlertAckResponse>("/api/v1/alerts/ack", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function getStreamUrl() {
+export function getStreamUrl(): string {
   return `${API_BASE_URL}/api/v1/stream`;
 }

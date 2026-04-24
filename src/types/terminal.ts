@@ -11,6 +11,8 @@ export type NewsItem = {
   breaking: boolean;
 };
 
+export type AlertLevel = "warning" | "critical";
+
 export type ConflictItem = {
   id: string;
   name: string;

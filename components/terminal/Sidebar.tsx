@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { LIVE_NEWS_SOURCES, REGION_OPTIONS } from "./data";
+import { REGION_OPTIONS } from "./data";
 import { useTerminalStore } from "./store";
 
 export default function Sidebar() {
@@ -12,6 +12,7 @@ export default function Sidebar() {
   const toggleMenu = useTerminalStore((state) => state.toggleMenu);
   const setSelectedRegion = useTerminalStore((state) => state.setSelectedRegion);
   const openLivePopup = useTerminalStore((state) => state.openLivePopup);
+  const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
 
   return (
     <nav className="w-64 h-full bg-[#05070a] border-r border-white/5 flex flex-col z-30 shadow-2xl shrink-0">
@@ -73,7 +74,7 @@ export default function Sidebar() {
           active={activeTab.startsWith("新聞直播/")}
         >
           <div className="text-[10px] text-gray-500 px-3 py-1.5 font-bold">新聞直播</div>
-          {LIVE_NEWS_SOURCES.map((source) => (
+          {liveNewsSources.map((source) => (
             <SubNavItem
               key={source.label}
               icon="📡"

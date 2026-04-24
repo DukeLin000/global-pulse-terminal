@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES, NEWS_ITEMS, REGION_OPTIONS } from "./data";
+import { REGION_OPTIONS } from "./data";
 import type { NewsItem, RegionKey } from "./types";
 import { useTerminalStore } from "./store";
 import { EconomicAdvancedChart, RiskTrendAdvancedChart } from "./AdvancedCharts";
@@ -27,27 +27,32 @@ export default function RightPanel() {
   const searchTerm = useTerminalStore((state) => state.searchTerm);
   const selectedRegion = useTerminalStore((state) => state.selectedRegion);
   const globalRiskIndex = useTerminalStore((state) => state.globalRiskIndex);
+  const newsItems = useTerminalStore((state) => state.newsItems);
+  const conflictItems = useTerminalStore((state) => state.conflictItems);
+  const liveNewsSources = useTerminalStore((state) => state.liveNewsSources);
+  const isDataLoading = useTerminalStore((state) => state.isDataLoading);
+  const dataError = useTerminalStore((state) => state.dataError);
   const collapsed = useTerminalStore((state) => state.isRightPanelCollapsed);
   const toggleRightPanelCollapsed = useTerminalStore((state) => state.toggleRightPanelCollapsed);
 
   const selectedLiveNewsSource = useMemo(
-    () => LIVE_NEWS_SOURCES.find((source) => activeTab === `新聞直播/${source.label}`),
-    [activeTab]
+    () => liveNewsSources.find((source) => activeTab === `新聞直播/${source.label}`),
+    [activeTab, liveNewsSources]
   );
 
   const filteredNews = useMemo(() => {
-    const withRegion = NEWS_ITEMS.filter((item) => isInSelectedRegion(selectedRegion, item.regions));
+    const withRegion = newsItems.filter((item) => isInSelectedRegion(selectedRegion, item.regions));
     if (!searchTerm.trim()) return withRegion;
     const query = searchTerm.toLowerCase();
     return withRegion.filter((item) => [item.source, item.title, ...item.tags].join(" ").toLowerCase().includes(query));
-  }, [searchTerm, selectedRegion]);
+  }, [newsItems, searchTerm, selectedRegion]);
 
   const filteredConflicts = useMemo(() => {
-    const withRegion = CONFLICT_ITEMS.filter((item) => selectedRegion === "global" || item.region === selectedRegion);
+    const withRegion = conflictItems.filter((item) => selectedRegion === "global" || item.region === selectedRegion);
     if (!searchTerm.trim()) return withRegion;
     const query = searchTerm.toLowerCase();
     return withRegion.filter((item) => item.name.toLowerCase().includes(query));
-  }, [searchTerm, selectedRegion]);
+  }, [conflictItems, searchTerm, selectedRegion]);
 
   const selectedRegionLabel = REGION_OPTIONS.find((option) => option.key === selectedRegion)?.label ?? "全球總覽";
   const showFlightPanel = activeTab.startsWith("交通狀態/飛航");
@@ -90,6 +95,13 @@ export default function RightPanel() {
             <span>全球風險指數</span>
             <span className="text-red-300 font-semibold">{globalRiskIndex}</span>
           </div>
+          <div className="flex justify-between">
+            <span>資料狀態</span>
+            <span className={isDataLoading ? "text-amber-300" : dataError ? "text-red-300" : "text-emerald-300"}>
+              {isDataLoading ? "同步中" : dataError ? "錯誤" : "已快取"}
+            </span>
+          </div>
+          {dataError && <div className="text-[9px] text-red-300/90 leading-relaxed">{dataError}</div>}
         </div>
       </DashboardPanel>
 

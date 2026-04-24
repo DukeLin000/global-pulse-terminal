@@ -66,6 +66,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
+  const elapsedRef = useRef(0);
   const earthMap = useLoader(THREE.TextureLoader, EARTH_TEXTURE_URL);
   const [hoverInfo, setHoverInfo] = useState<{
     title: string;
@@ -137,8 +138,9 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   // ----------------------------------------------------------------------
   // 動畫循環：控制地球自轉與飛機移動
   // ----------------------------------------------------------------------
-  useFrame((state) => {
-    const t = state.clock.getElapsedTime();
+  useFrame((_, delta) => {
+    elapsedRef.current += delta;
+    const t = elapsedRef.current;
     if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
 
     flightDotsRef.current.forEach((dot, i) => {

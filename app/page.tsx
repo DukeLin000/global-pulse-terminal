@@ -6,7 +6,10 @@ import Sidebar from "@/components/terminal/Sidebar";
 import TopHeader from "@/components/terminal/TopHeader";
 import RightPanel from "@/components/terminal/RightPanel";
 import LiveNewsPopup from "@/components/terminal/LiveNewsPopup";
-import { CONFLICT_ITEMS, LIVE_NEWS_SOURCES as TERMINAL_LIVE_NEWS_SOURCES } from "@/components/terminal/data";
+import {
+  CONFLICT_ITEMS as TERMINAL_CONFLICT_ITEMS,
+  LIVE_NEWS_SOURCES as TERMINAL_LIVE_NEWS_SOURCES,
+} from "@/components/terminal/data";
 import { useTerminalStore } from "@/components/terminal/store";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
@@ -87,8 +90,8 @@ export default function Terminal() {
   useEffect(() => {
     const scopedConflicts =
       selectedRegion === "global"
-        ? CONFLICT_ITEMS
-        : CONFLICT_ITEMS.filter((item) => item.region === selectedRegion);
+        ? TERMINAL_CONFLICT_ITEMS
+        : TERMINAL_CONFLICT_ITEMS.filter((item) => item.region === selectedRegion);
     const total = scopedConflicts.reduce((sum, item) => sum + item.score, 0);
     setGlobalRiskIndex(total);
   }, [selectedRegion, setGlobalRiskIndex]);

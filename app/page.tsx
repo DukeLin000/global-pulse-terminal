@@ -61,6 +61,7 @@ export default function Terminal() {
   const [timeStr, setTimeStr] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLivePopupOpen, setIsLivePopupOpen] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -145,9 +146,12 @@ export default function Terminal() {
           )}
 
           <RightPanel
+            activeTab={activeTab}
             selectedLiveNewsSource={selectedLiveNewsSource}
             filteredNews={filteredNews}
             filteredConflicts={filteredConflicts}
+            collapsed={isRightPanelCollapsed}
+            onToggleCollapsed={() => setIsRightPanelCollapsed((prev) => !prev)}
           />
         </div>
 

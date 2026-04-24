@@ -4,14 +4,76 @@ import type { ReactNode } from "react";
 import type { ConflictItem, LiveNewsSource, NewsItem } from "./types";
 
 type RightPanelProps = {
+  activeTab: string;
   selectedLiveNewsSource?: LiveNewsSource;
   filteredNews: NewsItem[];
   filteredConflicts: ConflictItem[];
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 };
 
-export default function RightPanel({ selectedLiveNewsSource, filteredNews, filteredConflicts }: RightPanelProps) {
+const FLIGHT_INFO = [
+  "Taipei → New York（長程國際線）",
+  "London → Dubai（中東轉運樞紐）",
+  "Tokyo → Paris（歐亞高頻商務航線）",
+];
+
+const SHIPPING_INFO = [
+  "Shanghai → Singapore（亞洲主幹海運）",
+  "Rotterdam → New York（歐美航運主線）",
+  "Hong Kong → Miami（跨洋高價值貨運）",
+];
+
+export default function RightPanel({
+  activeTab,
+  selectedLiveNewsSource,
+  filteredNews,
+  filteredConflicts,
+  collapsed,
+  onToggleCollapsed,
+}: RightPanelProps) {
+  const showFlightPanel = activeTab.startsWith("交通狀態/飛航");
+  const showShippingPanel = activeTab.startsWith("交通狀態/海運");
+
+  if (collapsed) {
+    return (
+      <aside className="w-14 z-20 mr-2 my-2 rounded-xl border border-white/10 bg-[#0a0e14]/90 backdrop-blur-xl flex flex-col items-center py-2 gap-2 pointer-events-auto">
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+          aria-label="展開右側資訊欄"
+        >
+          ◀
+        </button>
+        <div className="text-[9px] text-gray-400 [writing-mode:vertical-rl] tracking-widest">INFO</div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-[380px] z-10 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar ml-auto pointer-events-auto h-full">
+    <aside className="w-[380px] z-10 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar ml-auto pointer-events-auto h-full relative">
+      <button
+        type="button"
+        onClick={onToggleCollapsed}
+        className="absolute right-4 top-4 z-20 w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white"
+        aria-label="縮小右側資訊欄"
+      >
+        ▶
+      </button>
+
+      {showFlightPanel && (
+        <DashboardPanel title="飛航資訊" tag="AIR">
+          <InfoList items={FLIGHT_INFO} />
+        </DashboardPanel>
+      )}
+
+      {showShippingPanel && (
+        <DashboardPanel title="海運資訊" tag="SEA">
+          <InfoList items={SHIPPING_INFO} />
+        </DashboardPanel>
+      )}
+
       {selectedLiveNewsSource && (
         <DashboardPanel title="新聞直播" tag="OPENED">
           <div className="space-y-3">
@@ -171,4 +233,20 @@ type EmptyStateProps = {
 
 function EmptyState({ text }: EmptyStateProps) {
   return <div className="border border-dashed border-white/10 rounded-lg px-3 py-2 text-[10px] text-gray-500">{text}</div>;
+}
+
+type InfoListProps = {
+  items: string[];
+};
+
+function InfoList({ items }: InfoListProps) {
+  return (
+    <div className="space-y-2">
+      {items.map((item) => (
+        <div key={item} className="text-[10px] text-gray-300 px-2.5 py-2 rounded-md bg-white/5 border border-white/5">
+          {item}
+        </div>
+      ))}
+    </div>
+  );
 }

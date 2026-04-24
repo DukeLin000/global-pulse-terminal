@@ -15,6 +15,10 @@ function latLonToVec3(lat: number, lon: number, r: number) {
   );
 }
 
+function latLonPathToPoints(path: Array<[number, number]>, radius: number) {
+  return path.map(([lat, lon]) => latLonToVec3(lat, lon, radius));
+}
+
 // ----------------------------------------------------------------------
 // 1. 獨立的資料集：飛行航班 (Flight Routes)
 // ----------------------------------------------------------------------
@@ -54,6 +58,32 @@ const SHIPPING_ROUTES = [
   { fromName: "Tokyo", from: [35.4, 139.7], toName: "Los Angeles", to: [34.0, -118.2] },
   { fromName: "Rotterdam", from: [51.9, 4.5], toName: "New York", to: [40.7, -74.0] },
   { fromName: "Hong Kong", from: [22.3, 114.2], toName: "Miami", to: [25.8, -80.2] },
+];
+
+// 粗略的大陸輪廓（用於建立類似終端地圖邊界視覺）
+const CONTINENT_OUTLINES: Array<Array<[number, number]>> = [
+  // 北美洲
+  [
+    [72, -165], [65, -140], [58, -120], [52, -108], [45, -97], [31, -82], [20, -99],
+    [18, -110], [28, -118], [40, -125], [55, -140], [62, -155], [72, -165],
+  ],
+  // 南美洲
+  [
+    [12, -81], [8, -70], [0, -66], [-10, -60], [-22, -56], [-35, -60], [-50, -70],
+    [-55, -74], [-45, -66], [-28, -56], [-12, -50], [0, -54], [8, -63], [12, -81],
+  ],
+  // 歐亞非（簡化）
+  [
+    [70, -10], [62, 15], [58, 35], [55, 60], [60, 90], [55, 120], [45, 140], [30, 130],
+    [20, 110], [10, 100], [20, 80], [30, 65], [35, 45], [33, 25], [30, 10], [25, 0],
+    [15, -5], [5, 5], [-5, 20], [-20, 25], [-35, 20], [-35, 10], [-20, 5], [-5, 0],
+    [10, -10], [25, -15], [40, -5], [50, 5], [60, 0], [70, -10],
+  ],
+  // 澳洲
+  [
+    [-11, 113], [-20, 122], [-30, 138], [-36, 146], [-40, 153], [-28, 153], [-18, 145],
+    [-13, 130], [-11, 113],
+  ],
 ];
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
@@ -124,6 +154,12 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     return { shippingLines: linesArr, shippingDots: dotsArr };
   }, []);
 
+  const continentLines = useMemo(() => {
+    return CONTINENT_OUTLINES.map((path) =>
+      new THREE.BufferGeometry().setFromPoints(latLonPathToPoints(path, 2.515))
+    );
+  }, []);
+
   const showFlight = transportMode === "default" || transportMode === "flight" || transportMode === "allTransport";
   const showShipping = transportMode === "shipping" || transportMode === "allTransport";
 
@@ -180,6 +216,15 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           fragmentShader={`varying vec3 vNormal; void main(){float i=pow(0.7-dot(vNormal,vec3(0,0,1.0)),2.5); gl_FragColor=vec4(0.4,0.7,1.0,1.0)*i;}`}
         />
       </mesh>
+
+      <group name="MapOutlineLayer">
+        {continentLines.map((geo, i) => (
+          <line key={`continent-line-${i}`}>
+            <primitive object={geo} attach="geometry" />
+            <lineBasicMaterial color="#f59e0b" transparent opacity={0.75} />
+          </line>
+        ))}
+      </group>
 
       {/* =========================================
           圖層一：飛行航班 (藍色軌跡與亮點)

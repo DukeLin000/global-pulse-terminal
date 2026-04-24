@@ -14,6 +14,46 @@ import { useTerminalStore } from "@/components/terminal/store";
 
 const GlobeScene = dynamic(() => import("@/components/GlobeScene"), { ssr: false });
 
+type NewsItem = {
+  source: string;
+  title: string;
+  time: string;
+  tags: string[];
+};
+
+type ConflictItem = {
+  name: string;
+  score: number;
+};
+
+const NEWS_ITEMS: NewsItem[] = [
+  {
+    source: "ARJ News",
+    title: "【地緣觀察】台海區域電子作戰干擾強度增加，導航系統穩定性受阻。",
+    time: "1h",
+    tags: ["地緣政治", "台海", "軍事"],
+  },
+  {
+    source: "WHSR News",
+    title: "【能源預報】中東原油產量調整協議達成，預期市場波動率將降至新低。",
+    time: "3h",
+    tags: ["能源", "中東", "金融市場"],
+  },
+  {
+    source: "Market Pulse",
+    title: "【市場監控】美元指數短線走弱，亞太風險資產同步反彈。",
+    time: "5h",
+    tags: ["金融市場", "美元", "亞太"],
+  },
+];
+
+const CONFLICT_ITEMS: ConflictItem[] = [
+  { name: "Ukraine", score: 23 },
+  { name: "Gaza", score: 239 },
+  { name: "Red Sea", score: 88 },
+  { name: "Taiwan Strait", score: 64 },
+];
+
 export default function Terminal() {
   const [timeStr, setTimeStr] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);

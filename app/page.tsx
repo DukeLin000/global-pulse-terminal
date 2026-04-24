@@ -115,6 +115,13 @@ export default function Terminal() {
             icon="📈" label="金融市場" sub="金融市場追蹤" 
             active={activeTab === "金融市場"} onClick={() => setActiveTab("金融市場")} 
           />
+          <NavItem
+            icon="📰"
+            label="即時新聞"
+            sub="即時快訊監控"
+            active={activeTab === "即時新聞"}
+            onClick={() => setActiveTab("即時新聞")}
+          />
           
           <CollapsibleMenu 
             icon="💼" label="投資中心" sub="智慧投資引擎" 
@@ -400,6 +407,18 @@ function NewsCard({ source, title, time }: NewsCardProps) {
     <div className="bg-white/5 border border-white/5 p-3 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
       <div className="flex justify-between items-center mb-1"><span className="text-[8px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded font-bold uppercase">{source}</span><span className="text-[8px] text-gray-600 italic">{time}</span></div>
       <p className="text-[10px] leading-relaxed text-gray-300 line-clamp-2">{title}</p>
+    </div>
+  );
+}
+
+type EmptyStateProps = {
+  text: string;
+};
+
+function EmptyState({ text }: EmptyStateProps) {
+  return (
+    <div className="border border-dashed border-white/10 rounded-lg px-3 py-2 text-[10px] text-gray-500">
+      {text}
     </div>
   );
 }

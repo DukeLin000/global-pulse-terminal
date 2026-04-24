@@ -62,6 +62,8 @@ const SHIPPING_ROUTES = [
 
 export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
+  const cyberRingARef = useRef<THREE.Mesh>(null);
+  const cyberRingBRef = useRef<THREE.Mesh>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const elapsedRef = useRef(0);
@@ -139,6 +141,8 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
     elapsedRef.current += delta;
     const t = elapsedRef.current;
     if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
+    if (cyberRingARef.current) cyberRingARef.current.rotation.z += 0.004;
+    if (cyberRingBRef.current) cyberRingBRef.current.rotation.x -= 0.003;
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;
@@ -166,11 +170,11 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       <mesh>
         <sphereGeometry args={[2.5, 64, 64]} />
         <meshStandardMaterial
-          color="#10213d"
-          emissive="#0a1428"
-          emissiveIntensity={0.45}
-          roughness={0.92}
-          metalness={0.02}
+          color="#0b1022"
+          emissive="#132850"
+          emissiveIntensity={0.62}
+          roughness={0.88}
+          metalness={0.1}
           transparent
           opacity={0.95}
         />
@@ -178,7 +182,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
 
       <mesh>
         <sphereGeometry args={[2.505, 32, 16]} />
-        <meshBasicMaterial color="#f59e0b" wireframe transparent opacity={0.18} />
+        <meshBasicMaterial color="#00e5ff" wireframe transparent opacity={0.17} />
       </mesh>
 
       <mesh scale={1.1}>
@@ -188,8 +192,18 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           side={THREE.BackSide}
           blending={THREE.AdditiveBlending}
           vertexShader={`varying vec3 vNormal; void main(){vNormal=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
-          fragmentShader={`varying vec3 vNormal; void main(){float i=pow(0.7-dot(vNormal,vec3(0,0,1.0)),2.5); gl_FragColor=vec4(0.4,0.7,1.0,1.0)*i;}`}
+          fragmentShader={`varying vec3 vNormal; void main(){float i=pow(0.75-dot(vNormal,vec3(0,0,1.0)),2.2); gl_FragColor=vec4(0.0,0.9,1.0,1.0)*i;}`}
         />
+      </mesh>
+
+      <mesh ref={cyberRingARef} rotation={[Math.PI / 2.8, 0.4, 0]}>
+        <torusGeometry args={[2.85, 0.01, 12, 160]} />
+        <meshBasicMaterial color="#ff4ecd" transparent opacity={0.55} blending={THREE.AdditiveBlending} />
+      </mesh>
+
+      <mesh ref={cyberRingBRef} rotation={[Math.PI / 3.6, 1.2, 0]}>
+        <torusGeometry args={[3.0, 0.009, 10, 120]} />
+        <meshBasicMaterial color="#00e5ff" transparent opacity={0.45} blending={THREE.AdditiveBlending} />
       </mesh>
 
       {/* =========================================
@@ -200,7 +214,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           {lines.map((geo, i) => (
             <line key={`flight-line-${i}`}>
               <primitive object={geo} attach="geometry" />
-              <lineBasicMaterial color="#67e8f9" transparent opacity={0.35} />
+              <lineBasicMaterial color="#00e5ff" transparent opacity={0.4} />
             </line>
           ))}
 
@@ -212,7 +226,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
               }}
             >
               <sphereGeometry args={[0.02, 8, 8]} />
-              <meshBasicMaterial color="#67e8f9" />
+              <meshBasicMaterial color="#22d3ee" />
             </mesh>
           ))}
 
@@ -230,7 +244,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
               onPointerOut={() => setHoverInfo(null)}
             >
               <sphereGeometry args={[0.05, 10, 10]} />
-              <meshBasicMaterial color="#7dd3fc" transparent opacity={0.22} />
+              <meshBasicMaterial color="#67e8f9" transparent opacity={0.3} />
             </mesh>
           ))}
         </group>
@@ -241,7 +255,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           {shippingLines.map((geo, i) => (
             <line key={`shipping-line-${i}`}>
               <primitive object={geo} attach="geometry" />
-              <lineBasicMaterial color="#f59e0b" transparent opacity={0.45} />
+              <lineBasicMaterial color="#ff4ecd" transparent opacity={0.48} />
             </line>
           ))}
 
@@ -253,7 +267,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
               }}
             >
               <boxGeometry args={[0.03, 0.03, 0.03]} />
-              <meshBasicMaterial color="#fbbf24" />
+              <meshBasicMaterial color="#ff4ecd" />
             </mesh>
           ))}
 
@@ -271,7 +285,7 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
               onPointerOut={() => setHoverInfo(null)}
             >
               <octahedronGeometry args={[0.06, 0]} />
-              <meshBasicMaterial color="#f59e0b" transparent opacity={0.22} />
+              <meshBasicMaterial color="#ff6bd6" transparent opacity={0.3} />
             </mesh>
           ))}
         </group>
@@ -321,14 +335,16 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
       {/* =========================================
           場景燈光
       ========================================= */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 3, 5]} intensity={1} />
+      <ambientLight intensity={0.35} />
+      <pointLight position={[5, 2, 4]} intensity={1.2} color="#00e5ff" />
+      <pointLight position={[-4, -1, -3]} intensity={0.8} color="#ff4ecd" />
+      <directionalLight position={[5, 3, 5]} intensity={0.8} />
 
       {hoverInfo && (
         <Html position={hoverInfo.position} center>
-          <div className="bg-[#05070a]/95 border border-orange-500/40 rounded-md px-2 py-1.5 text-[10px] shadow-xl min-w-[150px] pointer-events-none">
-            <div className="text-orange-400 font-bold">{hoverInfo.title}</div>
-            <div className="text-gray-200 mt-0.5">{hoverInfo.detail}</div>
+          <div className="bg-[#020617]/95 border border-cyan-400/40 rounded-md px-2 py-1.5 text-[10px] shadow-[0_0_20px_rgba(0,229,255,0.25)] min-w-[150px] pointer-events-none">
+            <div className="text-cyan-300 font-bold">{hoverInfo.title}</div>
+            <div className="text-fuchsia-200 mt-0.5">{hoverInfo.detail}</div>
           </div>
         </Html>
       )}

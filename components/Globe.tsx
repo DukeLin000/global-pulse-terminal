@@ -46,6 +46,7 @@ type FlightDotPath = {
 
 type GlobeProps = {
   transportMode: "default" | "flight" | "shipping" | "allTransport";
+  autoRotate: boolean;
 };
 
 const SHIPPING_ROUTES = [
@@ -55,7 +56,7 @@ const SHIPPING_ROUTES = [
   { fromName: "Hong Kong", from: [22.3, 114.2], toName: "Miami", to: [25.8, -80.2] },
 ];
 
-export default function Globe({ transportMode }: GlobeProps) {
+export default function Globe({ transportMode, autoRotate }: GlobeProps) {
   const globeGroup = useRef<THREE.Group>(null);
   const flightDotsRef = useRef<Array<THREE.Mesh | null>>([]);
   const shippingDotsRef = useRef<Array<THREE.Mesh | null>>([]);
@@ -131,7 +132,7 @@ export default function Globe({ transportMode }: GlobeProps) {
   // ----------------------------------------------------------------------
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    if (globeGroup.current) globeGroup.current.rotation.y += 0.001;
+    if (globeGroup.current && autoRotate) globeGroup.current.rotation.y += 0.001;
 
     flightDotsRef.current.forEach((dot, i) => {
       if (!dot) return;

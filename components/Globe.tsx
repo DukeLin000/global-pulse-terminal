@@ -17,6 +17,10 @@ function latLonToVec3(lat: number, lon: number, r: number) {
   );
 }
 
+function latLonPathToPoints(path: Array<[number, number]>, radius: number) {
+  return path.map(([lat, lon]) => latLonToVec3(lat, lon, radius));
+}
+
 // ----------------------------------------------------------------------
 // 1. 獨立的資料集：飛行航班 (Flight Routes)
 // ----------------------------------------------------------------------
@@ -277,6 +281,16 @@ export default function Globe({ transportMode, autoRotate }: GlobeProps) {
           vertexShader={`varying vec3 vNormal; void main(){vNormal=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
           fragmentShader={`varying vec3 vNormal; void main(){float i=pow(0.75-dot(vNormal,vec3(0,0,1.0)),2.2); gl_FragColor=vec4(0.0,0.9,1.0,1.0)*i;}`}
         />
+      </mesh>
+
+      <mesh ref={cyberRingARef} rotation={[Math.PI / 2.8, 0.4, 0]}>
+        <torusGeometry args={[2.85, 0.01, 12, 160]} />
+        <meshBasicMaterial color="#ff4ecd" transparent opacity={0.55} blending={THREE.AdditiveBlending} />
+      </mesh>
+
+      <mesh ref={cyberRingBRef} rotation={[Math.PI / 3.6, 1.2, 0]}>
+        <torusGeometry args={[3.0, 0.009, 10, 120]} />
+        <meshBasicMaterial color="#00e5ff" transparent opacity={0.45} blending={THREE.AdditiveBlending} />
       </mesh>
 
       {/* =========================================

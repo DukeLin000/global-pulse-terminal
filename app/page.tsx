@@ -403,15 +403,3 @@ function NewsCard({ source, title, time }: NewsCardProps) {
     </div>
   );
 }
-
-type EmptyStateProps = {
-  text: string;
-};
-
-function EmptyState({ text }: EmptyStateProps) {
-  return (
-    <div className="border border-dashed border-white/10 rounded-lg px-3 py-2 text-[10px] text-gray-500">
-      {text}
-    </div>
-  );
-}
